@@ -4,6 +4,11 @@
   "description": "zerop2p redis backed keeper process in kubernetes",
   "main": "lib/zerop2p.js",
   "repository": "https://github.com/zerodao-finance/zero-keeper",
+  "scripts": {
+    "keeper": "node ./bin/keeper.js",
+    "watcher": "",
+    "dispatcher": ""
+  },
   "author": "altinak",
   "license": "MIT",
   "private": false,
@@ -30,5 +35,8 @@
     "ristretto255": "^0.1.2",
     "the-global-object": "^1.0.2",
     "wrtc": "^0.4.7"
+  },
+  "devDependencies": {
+    "ioredis": "^5.0.4"
   }
 }

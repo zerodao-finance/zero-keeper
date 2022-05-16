@@ -1,7 +1,8 @@
 const { ZeroP2P } = require('../lib/zerop2p');
 const { advertiseAsKeeper, handleRequests } = require('../lib/keeper');
-
-const redis = require('ioredis')(process.env.REDIS_URI);
+const Redis = require('ioredis');
+const redis = new Redis()
+// const redis = require('ioredis')(process.env.REDIS_URI);
 const ethers = require('ethers');
 
 const CONTROLLER_DEPLOYMENTS = {
@@ -16,11 +17,14 @@ const RPC_ENDPOINTS = {
 };
 
 (async () => {
-  const signer = new ethers.Wallet(process.env.WALLET).connect(RPC_ENDPOINTS.ETHEREUM);
+  console.log("keeper process started")
+  const signer = new ethers.Wallet(process.env.WALLET).connect(new ethers.providers.InfuraProvider('ropsten', RPC_ENDPOINTS.ETHEREUM));
   const peer = await ZeroP2P.fromPassword({
     signer,
     password: await signer.getAddress()
-  });
+  })
+  
+  await peer.start()
   handleRequests(peer);
   peer.on('zero:request', async (data) => {
     await redis.lpush('/zero/request', data);
