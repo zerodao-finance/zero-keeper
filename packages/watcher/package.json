@@ -1,5 +1,5 @@
 {
-  "name": "zero-keeper",
+  "name": "@zerodao/keeper-watcher",
   "version": "0.1.0",
   "description": "zerop2p redis backed keeper process in kubernetes",
   "main": "lib/zerop2p.js",
@@ -8,9 +8,6 @@
     "keeper": "node ./bin/keeper.js",
     "watcher": "",
     "dispatcher": ""
-  },
-  "prettier": {
-    "tabWidth": 2
   },
   "author": "altinak",
   "license": "MIT",
@@ -37,8 +34,7 @@
     "peer-info": "^0.17.5",
     "ristretto255": "^0.1.2",
     "the-global-object": "^1.0.2",
-    "wrtc": "^0.4.7",
-    "zero-protocol": "https://github.com/zerodao-finance/zero-protocol"
+    "wrtc": "^0.4.7"
   },
   "devDependencies": {
     "ioredis": "^5.0.4"
