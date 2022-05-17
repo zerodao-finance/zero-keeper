@@ -18,18 +18,19 @@ const requestTypes = {
   },
 };
 
-/**
- * @static wait { Promise }
- * @returns TransferRequest | BurnRequest | MetaRequest
- * fetches request from dispatch queue
- *
- */
 class Dispatcher {
+  /*
+   * not sure whether to build out signer like this or to use hardhat
+   */
   constructor({ rpcUrl, pvtKey, preset, target }) {
     this.provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     this.signer = new ethers.Wallet(pvtKey, provider);
     this.preset = preset;
+    this.runNext = true;
   }
+  /*
+   * formats and returns requests based on their class and decorates them as needed
+   */
   formatRequest(_r) {
     const requestType = requestTypes[_r.requestType];
     const request = new requestType.underlyingClass(_r);
@@ -45,6 +46,9 @@ class Dispatcher {
     }
     return request;
   }
+  /*
+   * fetches the next request in queue, formats it and returns it
+   */
   async wait() {
     const [_request] = await redis.brpop("/zero/dispatch");
     let request;
@@ -55,6 +59,10 @@ class Dispatcher {
     }
     return this.formatRequest(request);
   }
+
+  /*
+   * executes the request after prerequisites are met
+   */
   async execute(request) {
     await request.funcs.reduce(async (_r, func) => {
       await _r;
@@ -68,6 +76,11 @@ class Dispatcher {
       }
     }, Promise.resolve());
   }
+
+  /*
+   * needs to be rewritten a bit
+   * as of now, executes it similar to the older keeper, but needs to work with the inflight queue
+   */
   async handleTransferRequest(request) {
     const { execute } = this;
     console.log("Received Transfer Request", request);
@@ -103,5 +116,18 @@ class Dispatcher {
       })
     );
   }
-  async handleBurnRequest(request) {}
+  async handleBurnRequest(request) {
+    const { execute } = this;
+    await execute(request);
+  }
+  /*
+   * runs in a loop by recursing itself if this.runNext is true
+   */
+  async run() {
+    const request = await this.wait();
+    await this[request.handler](request);
+    if (this.runNext) this.run();
+  }
 }
+
+module.exports = Dispatcher;
