@@ -2,17 +2,22 @@
 This repository contains all logic for the zero keeper(s).
 
 ## Install Dependencies
-In your console, run:
+1. To install dependencies, run:
 ```
 yarn
 ```
 
-Then, confirm redis is installed on your machine
+2. Confirm redis is installed on your machine
 
 ## Running Locally
 **Make sure you have a wallet private key before proceeding (ideally, do not use your personal wallet)**
-In your console, run:
+1. Start redis locally, run:
 ```
 WALLET=<wallet-private-key-here> yarn keeper
 ```
+
+
+## Running a Kubernetes cluster locally
+1. Download the Kubernetes CLI
+
 
