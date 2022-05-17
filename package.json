@@ -9,6 +9,9 @@
     "watcher": "",
     "dispatcher": ""
   },
+  "prettier": {
+    "tabWidth": 2
+  },
   "author": "altinak",
   "license": "MIT",
   "private": false,
@@ -34,7 +37,8 @@
     "peer-info": "^0.17.5",
     "ristretto255": "^0.1.2",
     "the-global-object": "^1.0.2",
-    "wrtc": "^0.4.7"
+    "wrtc": "^0.4.7",
+    "zero-protocol": "https://github.com/zerodao-finance/zero-protocol"
   },
   "devDependencies": {
     "ioredis": "^5.0.4"
