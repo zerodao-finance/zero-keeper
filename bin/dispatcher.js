@@ -9,10 +9,12 @@ const requestTypes = {
   transfer: {
     underlyingClass: UnderwriterTransferRequest,
     funcs: ["loan", "repay"],
+    handler: "handleTransferRequest",
   },
   burn: {
     underlyingClass: UnderwriterBurnRequest,
     funcs: ["burn"],
+    handler: "handleBurnRequest",
   },
 };
 
@@ -23,7 +25,7 @@ const requestTypes = {
  *
  */
 class Dispatcher {
-  constructor({ rpcUrl, pvtKey, preset }) {
+  constructor({ rpcUrl, pvtKey, preset, target }) {
     this.provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     this.signer = new ethers.Wallet(pvtKey, provider);
     this.preset = preset;
@@ -32,7 +34,8 @@ class Dispatcher {
     const requestType = requestTypes[_r.requestType];
     const request = new requestType.underlyingClass(_r);
     request.funcs = requestType.funcs;
-    if (preset == "badger") {
+    request.handler = requestType.handler;
+    if (this.preset == "badger") {
       request.dry = async () => [];
       request.loan = async () => ({
         async wait() {
@@ -65,4 +68,40 @@ class Dispatcher {
       }
     }, Promise.resolve());
   }
+  async handleTransferRequest(request) {
+    const { execute } = this;
+    console.log("Received Transfer Request", request);
+    request.setProvider(this.provider);
+    console.log("Submitting to renVM...");
+    const mint = await request.submitToRenVM();
+    console.log("Sucessfully submitted to renVM.");
+    console.log("Gateway address is", await request.toGatewayAddress());
+    await new Promise((resolve, reject) =>
+      mint.on("deposit", async (deposit) => {
+        console.log("Deposit received.");
+        await resolve();
+        const hash = deposit.txHash();
+        const depositLog = (msg) =>
+          console.log(`RenVM Hash: ${hash}\nStatus: ${deposit.status}\n${msg}`);
+
+        await deposit
+          .confirmed()
+          .on("target", (target) => {
+            depositLog(`0/${target} confirmations`);
+          })
+          .on("confirmation", async (confs, target) => {
+            depositLog(`${confs}/${target} confirmations`);
+            if (confs == LOAN_CONFIRMATION) {
+              deposit.removeAllListeners("confirmation");
+              await execute(request);
+            }
+          });
+
+        await deposit.signed().on("status", (status) => {
+          depositLog(`Status: ${status}`);
+        });
+      })
+    );
+  }
+  async handleBurnRequest(request) {}
 }
