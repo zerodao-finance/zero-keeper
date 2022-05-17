@@ -1,6 +1,5 @@
 version: "3.2"
 services:
-
   redis:
     image: "redis:alpine"
     command: redis-server --bind redis --port 6379
@@ -9,8 +8,8 @@ services:
     networks:
       - requests
   keeper:
-    container_name: "Zero/Keeper Process"
-    build: '.'
+    container_name: "zero/keeper-watcher"
+    build: "./packages/watcher"
     restart: on-failure
     networks:
       - requests
