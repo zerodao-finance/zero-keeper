@@ -27,8 +27,16 @@ class Watcher {
 
     }
 
+
     async wait() {
-        const [_request] = await redis.brpoplpush('/zero/request', '/zero/inflight')
+	    const [_request] = await redis.blmpop(0, 1, ['/zero/requests'])
+        let request;
+        try {
+            request = JSON.parse(_request);
+        } catch (e) {
+            console.error("error parsing request")            
+        }
+        return this.formatRequest(request)
     }
 
     async run() {

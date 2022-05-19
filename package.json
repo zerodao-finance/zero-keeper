@@ -5,7 +5,7 @@
   "main": "lib/zerop2p.js",
   "repository": "https://github.com/zerodao-finance/zero-keeper",
   "scripts": {
-    "keeper": "node ./bin/keeper.js",
+    "keeper": "node ./packages/keeper/bin/keeper.js",
     "watcher": "",
     "dispatcher": ""
   },
