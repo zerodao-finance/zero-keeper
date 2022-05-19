@@ -66,7 +66,7 @@ const ln = (v) => ((console.log(v)), v);
 
 exports.ZeroP2P = class ZeroP2P extends Libp2p {
   static PRESETS = {
-    MAINNET: '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/'
+    MAINNET: '/dns4/devp2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/'
   };
   static fromPresetOrMultiAddr(multiaddr) {
     return this.PRESETS[(multiaddr || '').toUpperCase()] || multiaddr;

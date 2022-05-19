@@ -18,7 +18,7 @@ const RPC_ENDPOINTS = {
 
 (async () => {
   console.log("keeper process started")
-  const signer = new ethers.Wallet(process.env.WALLET).connect(new ethers.providers.InfuraProvider('ropsten', RPC_ENDPOINTS.ETHEREUM));
+  const signer = new ethers.Wallet(process.env.WALLET).connect(new ethers.providers.InfuraProvider('mainnet', RPC_ENDPOINTS.ETHEREUM));
   const peer = await ZeroP2P.fromPassword({
     signer,
     password: await signer.getAddress()
