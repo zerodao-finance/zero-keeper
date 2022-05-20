@@ -2,7 +2,7 @@
 const libp2p = require("libp2p");
 const WS = require("libp2p-websockets");
 const Mplex = require("libp2p-mplex");
-const Noise = require('libp2p-noise');
+const {NOISE} = require('libp2p-noise');
 const KadDHT = require("libp2p-kad-dht");
 const Bootstrap = require("libp2p-bootstrap");
 const PeerInfo = require("peer-info");
@@ -104,6 +104,7 @@ exports.ZeroP2P = class ZeroP2P extends Libp2p {
     const multiaddr = ZeroP2P.fromPresetOrMultiAddr(
       options.multiaddr || "mainnet"
     );
+    // console.log(multiaddr + 'QmXRimgxFGd8FEFRX8FvyzTG4jJTJ5pwoa3N5YDCrytASu')
     super({
       peerId: options.peerId,
       connectionManager: {
@@ -129,9 +130,9 @@ exports.ZeroP2P = class ZeroP2P extends Libp2p {
         listen: [multiaddr]
       },
       modules: {
-        transport: [WStar],
+        transport: [WS, WStar],
         streamMuxer: [Mplex],
-        connEncryption: [Noise],
+        connEncryption: [NOISE],
         pubsub: GossipSub,
         peerDiscovery: [Bootstrap],
         dht: KadDHT,

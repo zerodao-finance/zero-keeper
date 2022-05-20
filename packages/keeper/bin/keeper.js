@@ -25,8 +25,14 @@ const RPC_ENDPOINTS = {
   })
   
   await peer.start()
+
+
+  peer.multiaddrs.forEach(addr => {
+    console.log(`${addr.toString()}/p2p/${peer.peerId.toB58String()}`)
+  })
   handleRequests(peer);
   peer.on('zero:request', async (data) => {
+    console.log("data", data)
     await redis.lpush('/zero/request', data);
   });
   peer.on('error', console.error);

@@ -4,11 +4,11 @@ function fromJSONtoBuffer(o) {
 }
 
 exports.advertiseAsKeeper = async (p2p) => {
+  p2p.pubsub.subscribe('zero.keepers')
+  console.info('subscribed to keeper broadcast')
   const interval = setInterval(async () => {
     try {
       await p2p.pubsub.publish('zero.keepers', fromJSONtoBuffer({ address: (await p2p.addressPromise) }));
-      // console.log(`advertising self as keeper: ${await p2p.addressPromise}`)
-      // console.log(`Made presence known ${p2p.peerId.toB58String()}`)
     } catch (e) { console.error(e); }
   });
   return function unsubscribe() { clearInterval(interval) };
