@@ -130,7 +130,7 @@ exports.ZeroP2P = class ZeroP2P extends Libp2p {
         listen: [multiaddr]
       },
       modules: {
-        transport: [WS, WStar],
+        transport: [WStar],
         streamMuxer: [Mplex],
         connEncryption: [NOISE],
         pubsub: GossipSub,

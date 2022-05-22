@@ -2,11 +2,11 @@
   "name": "zero-keeper",
   "version": "0.1.0",
   "description": "zerop2p redis backed keeper process in kubernetes",
-  "main": "lib/zerop2p.js",
+  "main": "packages",
   "repository": "https://github.com/zerodao-finance/zero-keeper",
   "scripts": {
-    "keeper": "node ./packages/keeper/bin/keeper.js",
-    "watcher": "",
+    "run:keeper": "node ./packages/keeper",
+    "run:watcher": "node ./packages/watcher",
     "dispatcher": ""
   },
   "prettier": {
@@ -17,6 +17,7 @@
   "private": false,
   "dependencies": {
     "@noble/ed25519": "^1.6.0",
+    "@renproject/ren": "^2.5.13",
     "base64url": "^3.0.1",
     "buffer": "^6.0.3",
     "cryptico-js": "^1.1.0",

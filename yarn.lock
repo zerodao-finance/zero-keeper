@@ -787,6 +787,23 @@
     axios "^0.21.1"
     immutable "^4.0.0-rc.14"
 
+"@renproject/ren@^2.5.13":
+  version "2.5.13"
+  resolved "https://registry.yarnpkg.com/@renproject/ren/-/ren-2.5.13.tgz#14f703c795b995984fff8746d75405db9892ff6f"
+  integrity sha512-Rr4bHwXt1KUi0TLFnmUFdUhwws0XyHbE18pZ7cThD3MN3xkWChInYiCwmZsMxufcm8LzRJSHAk0bAlpyZ6bv5Q==
+  dependencies:
+    "@renproject/interfaces" "^2.5.10-1"
+    "@renproject/provider" "^2.5.13"
+    "@renproject/rpc" "^2.5.13"
+    "@renproject/utils" "^2.5.13"
+    "@types/bn.js" "^5.1.0"
+    "@types/node" ">=10"
+    axios "^0.21.1"
+    bignumber.js "^9.0.1"
+    bn.js "^5.2.0"
+    ethers "^5.4.3"
+    immutable "^4.0.0-rc.14"
+
 "@renproject/rpc@^2.5.13":
   version "2.5.13"
   resolved "https://registry.yarnpkg.com/@renproject/rpc/-/rpc-2.5.13.tgz#3313f1685429d9a780e47e5d69eed6eb1f227eaf"

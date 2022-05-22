@@ -1,7 +1,7 @@
 const { ZeroP2P } = require('../lib/zerop2p');
 const { advertiseAsKeeper, handleRequests } = require('../lib/keeper');
 const Redis = require('ioredis');
-const redis = new Redis()
+const redis = new Redis({host: 'redis', lazyConnect: true})
 // const redis = require('ioredis')(process.env.REDIS_URI);
 const ethers = require('ethers');
 
@@ -16,7 +16,8 @@ const RPC_ENDPOINTS = {
   ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
 };
 
-(async () => {
+const main = async() => {
+  
   console.log("keeper process started")
   const signer = new ethers.Wallet(process.env.WALLET).connect(new ethers.providers.InfuraProvider('mainnet', RPC_ENDPOINTS.ETHEREUM));
   const peer = await ZeroP2P.fromPassword({
@@ -25,17 +26,24 @@ const RPC_ENDPOINTS = {
   })
   
   await peer.start()
-
-
+  
+  
   peer.multiaddrs.forEach(addr => {
     console.log(`${addr.toString()}/p2p/${peer.peerId.toB58String()}`)
   })
   handleRequests(peer);
   peer.on('zero:request', async (data) => {
     console.log("data", data)
+    redis.connect()
     await redis.lpush('/zero/request', data);
   });
   peer.on('error', console.error);
   advertiseAsKeeper(peer);
-})().catch(console.error);
-	
+  console.log("keeper online...")
+  return 
+}
+
+main()
+
+
+  

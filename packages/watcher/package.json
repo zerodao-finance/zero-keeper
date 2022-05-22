@@ -1,0 +1,35 @@
+{
+    "name": "@zerodao/watcher",
+    "version": "0.1.0",
+    "description": "zerop2p redis backed keeper process in kubernetes",
+    "main": "bin/watcher.js",
+    "repository": "https://github.com/zerodao-finance/zero-keeper",
+    "scripts": {
+      "watcher": "node ./bin/watcher.js",
+      "dispatcher": ""
+    },
+    "author": "altinak",
+    "license": "MIT",
+    "private": false,
+    "dependencies": {
+      "@noble/ed25519": "^1.6.0",
+      "base64url": "^3.0.1",
+      "@renproject/ren": "^2.5.13",
+      "buffer": "^6.0.3",
+      "cryptico-js": "^1.1.0",
+      "ethers": "^5.6.6",
+      "is-browser": "^2.1.0",
+      "lodash": "^4.17.21",
+      "nice-repl": "^0.1.2",
+      "peer-id": "^0.16.0",
+      "peer-info": "^0.17.5",
+      "ristretto255": "^0.1.2",
+      "the-global-object": "^1.0.2",
+      "wrtc": "^0.4.7"
+    },
+    "devDependencies": {
+      "zero-protocol": "https://github.com/zerodao-finance/zero-protocol",
+      "ioredis": "^5.0.4"
+    }
+  }
+  

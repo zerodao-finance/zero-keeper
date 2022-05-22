@@ -2,7 +2,7 @@
   "name": "@zerodao/keeper-main",
   "version": "0.1.0",
   "description": "zerop2p redis backed keeper process in kubernetes",
-  "main": "lib/zerop2p.js",
+  "main": "bin/keeper.js",
   "repository": "https://github.com/zerodao-finance/zero-keeper",
   "scripts": {
     "keeper": "node ./bin/keeper.js",
@@ -28,6 +28,7 @@
     "libp2p-noise": "^4.0.0",
     "libp2p-webrtc-star": "^0.25.0",
     "libp2p-websockets": "^0.16.2",
+    "@renproject/ren": "^2.5.13",
     "lodash": "^4.17.21",
     "nice-repl": "^0.1.2",
     "peer-id": "^0.16.0",
