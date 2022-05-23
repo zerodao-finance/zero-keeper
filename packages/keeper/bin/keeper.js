@@ -16,8 +16,13 @@ const RPC_ENDPOINTS = {
   ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
 };
 
+const packageJson = require('../package');
+const { createLogger } = require('@zerodao/logger');
+
+const logger = createLogger(packageJson.name);
+
 (async () => {
-  console.log("keeper process started")
+  logger.info("keeper process started")
   const signer = new ethers.Wallet(process.env.WALLET).connect(new ethers.providers.InfuraProvider('ropsten', RPC_ENDPOINTS.ETHEREUM));
   const peer = await ZeroP2P.fromPassword({
     signer,
@@ -29,7 +34,7 @@ const RPC_ENDPOINTS = {
   peer.on('zero:request', async (data) => {
     await redis.lpush('/zero/request', data);
   });
-  peer.on('error', console.error);
+  peer.on('error', logger.error.bind(logger));
   advertiseAsKeeper(peer);
-})().catch(console.error);
+})().catch(logger.error.bind(logger));
 	

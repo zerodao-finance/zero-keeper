@@ -1,0 +1,15 @@
+{
+  "name": "@zerodao/dispatcher",
+  "version": "0.1.0",
+  "description": "dispatcher",
+  "main": "lib/dispatcher.js",
+  "repository": "https://github.com/zerodao-finance/zero-keeper",
+  "author": "zeroDAO",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "ethers": "^5.6.7",
+    "ethers-gasnow": "https://github.com/kungfuflex/ethers-gasnow",
+    "ethers-polygongastracker": "https://github.com/freelogstudio/ethers-polygongastracker"
+  }
+}

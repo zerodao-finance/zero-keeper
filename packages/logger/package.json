@@ -1,0 +1,13 @@
+{
+  "name": "@zerodao/logger",
+  "version": "0.1.0",
+  "description": "logger",
+  "main": "lib/logger.js",
+  "repository": "https://github.com/zerodao-finance/zero-keeper",
+  "author": "zeroDAO",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "moment": "^2.29.3"
+  }
+}
