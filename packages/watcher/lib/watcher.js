@@ -25,8 +25,8 @@ const WatcherProcess = exports.WatcherProcess = class WatcherProcess {
         const transferRequest = new UnderwriterTransferRequest(request);
         const { signature, amount, nHash, pHash } = await transferRequest.waitForSignature();
         await this.redis.rpush('/zero/dispatch', encodeTransferRequestRepay(transferRequest, { signature, amount, nHash, pHash })); // TODO: implement
-        // BURN NEEDS TO GET PUT IN THE DISPATCH QUEUE IMMEDIATELY
-        // TRANSFER GOES RIGHT TO PENDING QUEUE. AS LONG AS TRY-CATCHED PROPERLY IT CAN GO IN KEEPER PROCESS
+        // TODO: BURN NEEDS TO GET PUT IN THE DISPATCH QUEUE IMMEDIATELY
+        // TODO: TRANSFER GOES RIGHT TO PENDING QUEUE. AS LONG AS TRY-CATCHED PROPERLY IT CAN GO IN KEEPER PROCESS
         await this.redis.ldel('/zero/watch', 0);
       } catch (e) {
         this.logger.error(e);

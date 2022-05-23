@@ -11,13 +11,13 @@ const redis = require("ioredis")(process.env.REDIS_URI);
 //send BurnRequests directly to dispatch queue
 
 class Watcher {
-    
+
     constructor() {
 
     }
 
     async stream() {
-        //TODO: injest redis list 
+        //TODO: injest redis list
         //TODO: process requests accordingly
     }
 
