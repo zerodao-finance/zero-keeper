@@ -1,0 +1,9 @@
+{
+  "name": "@zerodao/watcher",
+  "version": "0.1.0",
+  "description": "watcher",
+  "main": "lib/watcher.js",
+  "repository": "https://github.com/zerodao-finance/zero-keeper",
+  "author": "zeroDAO",
+  "license": "MIT"
+}
