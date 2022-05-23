@@ -1,5 +1,5 @@
 FROM node:lts
-WORKDIR /
-RUN npm install yarn 
+WORKDIR /app
+COPY . .
 RUN yarn
-RUN yarn keeper
+CMD ["yarn", "workspace", "@zerodao/keeper-watcher", "keeper"]

@@ -1,15 +1,14 @@
 version: "3.2"
 services:
   redis:
-    image: "redis:alpine"
-    command: redis-server --bind redis --port 6379
+    image: redis
     ports:
       - 6379:6379
-    networks:
-      - requests
+    restart: unless-stopped
   keeper:
-    container_name: "zero/keeper-watcher"
-    build: "./packages/watcher"
-    restart: on-failure
-    networks:
-      - requests
+    image: zerodao/keeper
+    build:
+      context: ./
+      dockerfile:
+        packages/watcher/Dockerfile
+    restart: unless-stopped
