@@ -1,6 +1,8 @@
 'use strict';
 import { UnderwriterTransferRequest, UnderwriterBurnRequest } from "zero-protocol/dist/lib/zero";
 import { requestTypes } from './requestTypes'
+import { ethers } from 'ethers'
+
 // only run one of these
 const WatcherProcess = exports.WatcherProcess = class WatcherProcess {
   constructor({

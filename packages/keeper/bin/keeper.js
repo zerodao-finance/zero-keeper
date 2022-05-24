@@ -1,7 +1,7 @@
 const { ZeroP2P } = require('../lib/zerop2p');
 const { advertiseAsKeeper, handleRequests } = require('../lib/keeper');
 const Redis = require('ioredis');
-const redis = new Redis()
+const redis = new Redis({ host: 'redis' })
 // const redis = require('ioredis')(process.env.REDIS_URI);
 const ethers = require('ethers');
 

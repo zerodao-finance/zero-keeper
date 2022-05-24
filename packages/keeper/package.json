@@ -5,7 +5,7 @@
   "main": "lib/zerop2p.js",
   "repository": "https://github.com/zerodao-finance/zero-keeper",
   "scripts": {
-    "keeper": "cross-env node bin/keeper.js"
+    "start": "cross-env node bin/keeper.js"
   },
   "author": "altinak",
   "license": "MIT",
@@ -16,6 +16,8 @@
     "buffer": "^6.0.3",
     "cryptico-js": "^1.1.0",
     "ethers": "^5.6.6",
+    "ethers-gasnow": "https://github.com/kungfuflex/ethers-gasnow",
+    "ethers-polygongastracker": "https://github.com/freelogstudio/ethers-polygongastracker",
     "is-browser": "^2.1.0",
     "libp2p": "^0.36.2",
     "libp2p-bootstrap": "^0.14.0",

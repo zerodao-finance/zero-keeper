@@ -10,5 +10,5 @@ services:
     build:
       context: ./
       dockerfile:
-        packages/watcher/Dockerfile
+        packages/keeper/Dockerfile
     restart: unless-stopped
