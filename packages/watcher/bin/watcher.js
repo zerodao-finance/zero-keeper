@@ -5,27 +5,13 @@
  * pushes to dispatch queue when signatures received
  */
 
-const redis = require("ioredis")(process.env.REDIS_URI);
+const Redis = require("ioredis");
+const redis = new Redis({ host: 'redis' })
 
+const { WatcherProcess } = require('../lib/watcher');
+import { createLogger } from '../../logger/lib/logger'
 //watch TransferRequests until ready for dispatch
 //send BurnRequests directly to dispatch queue
 
-class Watcher {
-
-    constructor() {
-
-    }
-
-    async stream() {
-        //TODO: injest redis list
-        //TODO: process requests accordingly
-    }
-
-    async sinkDispatch(data) {
-        await redis.lpush('/zero/dispatch', data)
-    }
-
-    async sinkUTXO() {
-        await redis.lpush('/zero/in-flight')
-    }
-}
+let watcher = new WatcherProcess(createLogger(), redis)
+watcher.runLoop()
