@@ -6,7 +6,7 @@ const {
 const { Networks, Opcode, Script } = require("bitcore-lib");
 const { RenJS } = require("@renproject/ren");
 const { getUTXOs } =
-  require("send-crypto/build/main/handlers/BTCHandler").BTCHandler;
+  require("send-crypto/build/main/handlers/BTC/BTCHandler").BTCHandler;
 
 const ren = new RenJS("mainnet");
 
@@ -24,8 +24,6 @@ const encodeTransferRequestLoan = (transferRequest) => {
     transferRequest.signature,
   ]);
 };
-
-con;
 
 const computePHash = (transferRequest) => {
   return ethers.utils.solidityKeccak256(

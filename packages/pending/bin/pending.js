@@ -1,5 +1,5 @@
 const { PendingProcess } = require('../lib/pending');
-const redis = require('ioredis')();
+const redis = new (require('ioredis'))();
 
 (async () => {
   const pendingProcess = new PendingProcess({

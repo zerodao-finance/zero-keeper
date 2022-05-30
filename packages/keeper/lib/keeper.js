@@ -1,4 +1,7 @@
 const ethers = require('ethers')
+
+const KEEPER_INTERVAL = 8000;
+
 function fromJSONtoBuffer(o) {
   return ethers.utils.arrayify(Buffer.from(JSON.stringify(o), 'utf8'));
 }
@@ -9,7 +12,7 @@ exports.advertiseAsKeeper = async (p2p) => {
       await p2p.pubsub.publish('zero.keepers', fromJSONtoBuffer({ address: (await p2p.addressPromise) }));
       console.log(`advertising self as keeper: ${await p2p.addressPromise}`)
     } catch (e) { console.error(e); }
-  });
+  }, KEEPER_INTERVAL);
   return function unsubscribe() { clearInterval(interval) };
 };
 const lp = require('it-length-prefixed');

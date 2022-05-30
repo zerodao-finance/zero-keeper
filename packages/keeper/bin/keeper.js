@@ -60,6 +60,7 @@ const encodeBurnRequest = (request) => {
     }
   });
   peer.on('error', logger.error.bind(logger));
+  await peer.pubsub.start();
   advertiseAsKeeper(peer);
 })().catch(logger.error.bind(logger));
 	
