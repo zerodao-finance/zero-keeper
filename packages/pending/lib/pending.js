@@ -10,6 +10,23 @@ const { getUTXOs } =
 
 const ren = new RenJS("mainnet");
 
+const encodeTransferRequestLoan = (transferRequest) => {
+  const contractInterface = new ethers.utils.Interface([
+    "function loan(address, address, uint256, uint256, address, bytes, bytes)",
+  ]);
+  return contractInterface.encodeFunctionData("loan", [
+    transferRequest.destination(),
+    transferRequest.asset,
+    transferRequest.amount,
+    transferRequest.pNonce,
+    transferRequest.module,
+    transferRequest.data,
+    transferRequest.signature,
+  ]);
+};
+
+con;
+
 const computePHash = (transferRequest) => {
   return ethers.utils.solidityKeccak256(
     ["bytes"],
@@ -56,6 +73,22 @@ const computeGatewayAddress = (transferRequest, mpkh) =>
     .toAddress(false)
     .toString();
 
+const getBTCBlockNumber = async () => 0; // unused anyway
+const CONTROLLER_DEPLOYMENTS = {
+  "0x53f38bEA30fE6919e0475Fe57C2629f3D3754d1E": 42161,
+  "0x85dAC4da6eB28393088CF65b73bA1eA30e7e3cab": 137,
+  "0xa8BD3FfEbF92538b3b830DD5B2516A5111DB164D": 1,
+};
+
+const getChainId = (request) => {
+  return (
+    CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(request.contractAddress)] ||
+    (() => {
+      throw Error("no controller found: " + request.contractAddress);
+    })()
+  );
+};
+
 const PendingProcess = (exports.PendingProcess = class PendingProcess {
   constructor({ redis, mpkh }) {
     this.redis = redis;
@@ -85,10 +118,11 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
                 transferRequest.contractAddress !==
                 BadgerBridgeZeroController.address
               )
-                await this.redis.lpush(
-                  "/zero/dispatch",
-                  encodeTransferRequestLoan(transferRequest)
-                ); // TODO: implement encodeTransferRequestLoan
+                await this.redis.lpush("/zero/dispatch", {
+                  to: transferRequest.contractAddress,
+                  data: encodeTransferRequestLoan(transferRequest),
+                  chainId: getChainId(transferRequest),
+                }); // TODO: implement encodeTransferRequestLoan
               await this.redis.rpush(
                 "/zero/watch",
                 JSON.stringify({
