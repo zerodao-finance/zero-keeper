@@ -1,31 +1,17 @@
-/**
- * spec
- * 
- * watcher should 'zero/request' redis queue for transactions
- * pushes to dispatch queue when signatures received
- */
+'use strict';
 
-const redis = require("ioredis")(process.env.REDIS_URI);
+const redis = new (require("ioredis"))();
 
-//watch TransferRequests until ready for dispatch
-//send BurnRequests directly to dispatch queue
+const { createLogger } = require('@zerodao/logger');
+const packageJson = require('../package');
+const logger = createLogger(packageJson.name);
+const { WatcherProcess } = require('../lib/watcher');
 
-class Watcher {
-    
-    constructor() {
 
-    }
-
-    async stream() {
-        //TODO: injest redis list 
-        //TODO: process requests accordingly
-    }
-
-    async sinkDispatch(data) {
-        await redis.lpush('/zero/dispatch', data)
-    }
-
-    async sinkUTXO() {
-        await redis.lpush('/zero/in-flight')
-    }
-}
+(async () => {
+  const watcherProcess = new WatcherProcess({
+    redis,
+    logger
+  });
+  await watcherProcess.runLoop();
+})().catch(console.error);

@@ -44,7 +44,7 @@ const WatcherProcess = (exports.WatcherProcess = class WatcherProcess {
   async runLoop() {
     while (true) {
       try {
-        if (!(await this.redis.llen())) {
+        if (!(await this.redis.llen('/zero/watch'))) {
           await this.timeout(1000);
           continue;
         }

@@ -3,5 +3,10 @@
   "version": "0.1.0",
   "description": "zerop2p redis backed keeper process in kubernetes",
   "private": true,
-  "workspaces": ["./packages/**"]
+  "workspaces": [
+    "./packages/**"
+  ],
+  "dependencies": {
+    "pm2": "^5.2.0"
+  }
 }

@@ -5,7 +5,7 @@
   "main": "lib/zerop2p.js",
   "repository": "https://github.com/zerodao-finance/zero-keeper",
   "scripts": {
-    "keeper": "cross-env node bin/keeper.js"
+    "start": "cross-env node bin/keeper.js"
   },
   "author": "altinak",
   "license": "MIT",
