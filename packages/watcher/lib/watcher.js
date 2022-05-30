@@ -1,7 +1,7 @@
 "use strict";
 
 // only run one of these
-
+import { UnderwriterTransferRequest } from 'zero-protocol/dist/lib/zero'
 const encodeTransferRequestRepay = (transferRequest, queryResult) => {
   const contractInterface = new ethers.utils.Interface([
     "function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)",
