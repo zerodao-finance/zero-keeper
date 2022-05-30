@@ -11,5 +11,9 @@
   }, {
     "name": "dispatcher",
     "script": "yarn workspace @zerodao/dispatcher start"
-  }]
+  }],
+
+  "deploy": {
+    "post-deploy": "yarn && pm2 reload pm2-apps.json"
+  }
 }

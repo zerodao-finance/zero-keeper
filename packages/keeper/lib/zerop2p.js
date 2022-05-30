@@ -2,7 +2,7 @@
 const libp2p = require("libp2p");
 const WS = require("libp2p-websockets");
 const Mplex = require("libp2p-mplex");
-const Noise = require('libp2p-noise');
+const { NOISE } = require('libp2p-noise');
 const KadDHT = require("libp2p-kad-dht");
 const Bootstrap = require("libp2p-bootstrap");
 const PeerInfo = require("peer-info");
@@ -66,7 +66,7 @@ const ln = (v) => ((console.log(v)), v);
 
 exports.ZeroP2P = class ZeroP2P extends Libp2p {
   static PRESETS = {
-    MAINNET: '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/'
+    MAINNET: '/dns4/devp2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/'
   };
   static fromPresetOrMultiAddr(multiaddr) {
     return this.PRESETS[(multiaddr || '').toUpperCase()] || multiaddr;
@@ -131,7 +131,7 @@ exports.ZeroP2P = class ZeroP2P extends Libp2p {
       modules: {
         transport: [WStar],
         streamMuxer: [Mplex],
-        connEncryption: [Noise],
+        connEncryption: [NOISE],
         pubsub: GossipSub,
         peerDiscovery: [Bootstrap],
         dht: KadDHT,

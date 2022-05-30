@@ -9,6 +9,7 @@ const RPC_ENDPOINTS = {
   ARBITRUM: 'https://arb1.arbitrum.io/rpc',
   MATIC: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
   ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+  local: 'http://localhost:8545'
 };
 
 const packageJson = require('../package');
@@ -34,7 +35,7 @@ const encodeBurnRequest = (request) => {
 
 (async () => {
   logger.info("keeper process started")
-  const signer = new ethers.Wallet(process.env.WALLET).connect(new ethers.providers.InfuraProvider('ropsten', RPC_ENDPOINTS.ETHEREUM));
+  const signer = new ethers.Wallet(process.env.WALLET).connect(new ethers.providers.InfuraProvider('mainnet', RPC_ENDPOINTS.ETHEREUM));
   const peer = await ZeroP2P.fromPassword({
     signer,
     password: await signer.getAddress()

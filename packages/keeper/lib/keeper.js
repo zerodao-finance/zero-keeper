@@ -27,13 +27,13 @@ const pipeToString = async (stream) => {
           string.push(msg.toString());
         }
       } catch (e) { return reject(e); }
-      resolve(string.join());
+      resolve(string.join(''));
     });
   });
 };
 
 exports.handleRequests = (p2p) => {
-   p2p.handle('/zero/user/dispatch', async (duplex) => {
+   p2p.handle('/zero/1.1.0/dispatch', async (duplex) => {
     try { 
       p2p.emit('zero:request', (await pipeToString(duplex.stream)));
     } catch (e) { p2p.emit('error', e); }
