@@ -5,10 +5,28 @@ services:
     ports:
       - 6379:6379
     restart: unless-stopped
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
   keeper:
     image: zerodao/keeper
+    network_mode: host
     build:
       context: ./
       dockerfile:
         packages/keeper/Dockerfile
+    restart: unless-stopped
+  watcher:
+    image: zerodao/watcher
+    network_mode: host
+    build:
+      context: ./
+      dockerfile:
+        packages/watcher/Dockerfile
     restart: unless-stopped

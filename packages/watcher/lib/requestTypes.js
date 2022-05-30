@@ -1,3 +1,4 @@
+const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require("zero-protocol/dist/lib/zero");
 exports.requestTypes = {
     transfer: {
         underlyingClass: UnderwriterTransferRequest,

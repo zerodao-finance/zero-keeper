@@ -1,8 +1,7 @@
 const { ZeroP2P } = require('../lib/zerop2p');
 const { advertiseAsKeeper, handleRequests } = require('../lib/keeper');
 const Redis = require('ioredis');
-const redis = new Redis({ host: 'redis' })
-// const redis = require('ioredis')(process.env.REDIS_URI);
+const redis = new Redis();
 const ethers = require('ethers');
 
 const CONTROLLER_DEPLOYMENTS = {
@@ -14,16 +13,17 @@ const RPC_ENDPOINTS = {
   ARBITRUM: 'https://arb1.arbitrum.io/rpc',
   MATIC: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
   ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+  LOCALHOST: 'http://localhost:8545'
 };
 
 const packageJson = require('../package');
 const { createLogger } = require('@zerodao/logger');
 
 const logger = createLogger(packageJson.name);
-
+ 
 (async () => {
   logger.info("keeper process started")
-  const signer = new ethers.Wallet(process.env.WALLET).connect(new ethers.providers.InfuraProvider('ropsten', RPC_ENDPOINTS.ETHEREUM));
+  const signer = new ethers.Wallet(process.env.WALLET).connect(new ethers.providers.InfuraProvider('mainnet', RPC_ENDPOINTS.LOCALHOST));
   const peer = await ZeroP2P.fromPassword({
     signer,
     password: await signer.getAddress()
@@ -31,7 +31,9 @@ const logger = createLogger(packageJson.name);
   
   await peer.start()
   handleRequests(peer);
+
   peer.on('zero:request', async (data) => {
+    console.log(data)
     await redis.lpush('/zero/request', data);
   });
   peer.on('error', logger.error.bind(logger));

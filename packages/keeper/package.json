@@ -20,6 +20,7 @@
     "ethers-polygongastracker": "https://github.com/freelogstudio/ethers-polygongastracker",
     "is-browser": "^2.1.0",
     "libp2p": "^0.36.2",
+    "@renproject/ren": "2.5.13",
     "libp2p-bootstrap": "^0.14.0",
     "libp2p-crypto": "^0.21.2",
     "libp2p-gossipsub": "^0.13.0",
@@ -34,7 +35,8 @@
     "peer-info": "^0.17.5",
     "ristretto255": "^0.1.2",
     "the-global-object": "^1.0.2",
-    "wrtc": "^0.4.7"
+    "wrtc": "^0.4.7",
+    "zero-protocol": "https://github.com/zerodao-finance/zero-protocol"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

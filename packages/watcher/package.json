@@ -4,6 +4,12 @@
   "description": "watcher",
   "main": "lib/watcher.js",
   "repository": "https://github.com/zerodao-finance/zero-keeper",
+  "scripts": {
+    "start": "cross-env node bin/watcher.js"
+  },
   "author": "zeroDAO",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
 }
