@@ -31,7 +31,7 @@ const getChainId = (request) => {
 
 const encodeBurnRequest = (request) => {
   const contractInterface = new ethers.utils.Interface(['function burn(address, address, uint256, uint256, bytes, bytes, bytes)']);
-  return contractInterface.encodeFunctionData('burn', [request.to, request.asset, request.amount, request.deadline, request.data, request.destination, request.signature ]);
+  return contractInterface.encodeFunctionData('burn', [request.owner, request.asset, request.amount, request.deadline, request.data, request.destination, request.signature ]);
 };
 
 (async () => {

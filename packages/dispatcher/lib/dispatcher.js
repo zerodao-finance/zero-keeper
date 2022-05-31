@@ -14,6 +14,8 @@ const RPC_ENDPOINTS = {
 
 const ERROR_TIMEOUT = 1000;
 
+const util = require('util');
+
 const Dispatcher = exports.Dispatcher = class Dispatcher {
   static RPC_ENDPOINTS = RPC_ENDPOINTS;
   static ERROR_TIMEOUT = ERROR_TIMEOUT;
@@ -30,15 +32,22 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
       signer
     });
     if (!this.logger) this.logger = createLogger(packageJson.name);
-    this.providers = Object.entries(this.constructor.RPC_ENDPOINTS).reduce((r, v) => {
-      const provider = r[v.key] = new ethers.providers.JsonRpcProvider(v.value);
-      if (v.key == 1) provider.getGasPrice = gasnow.createGetGasPrice('rapid');
-      else if (v.key == 137) provider.getGasPrice = polygongastracker.createGetGasPrice('rapid');
+    this.providers = Object.entries(this.constructor.RPC_ENDPOINTS).reduce((r, [ key, value ]) => {
+      const provider = r[key] = new ethers.providers.JsonRpcProvider(value);
+      if (key == 1) provider.getGasPrice = gasnow.createGetGasPrice('rapid');
+      else if (key == 137) provider.getGasPrice = polygongastracker.createGetGasPrice('rapid');
+      return r;
+    }, {});
+    this.signers = Object.entries(this.constructor.RPC_ENDPOINTS).reduce((r, [ key, value ]) => {
+      r[key] = signer.connect(this.makeProvider(key));
       return r;
     }, {});
   }
   makeProvider(chainId) {
     return this.providers[chainId];
+  }
+  getSigner(chainId) {
+    return this.signers[chainId];
   }
   async runLoop() {
     this.logger.info('starting dispatch loop');
@@ -50,8 +59,10 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
           continue;
 	}
 	const tx = JSON.parse(txSerialized);
+        this.logger.info('dispatching tx');
+        this.logger.info(util.inspect(tx, { colors: true, depth: 15 }));
         try {
-          const dispatched = await this.signer.connect(this.makeProvider(tx.chainId)).sendTransaction({
+          const dispatched = await (this.getSigner(tx.chainId)).sendTransaction({
             ...tx,
             chainId: undefined,
             gasLimit: this.gasLimit
