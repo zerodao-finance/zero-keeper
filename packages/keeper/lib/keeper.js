@@ -1,15 +1,19 @@
 const ethers = require('ethers')
 
-const KEEPER_INTERVAL = 8000;
+const KEEPER_INTERVAL = 30000;
 
 function fromJSONtoBuffer(o) {
   return ethers.utils.arrayify(Buffer.from(JSON.stringify(o), 'utf8'));
 }
 
+const { createLogger } = require('@zerodao/logger');
+const logger = createLogger(require('../package').name);
+
 exports.advertiseAsKeeper = async (p2p) => {
   const interval = setInterval(async () => {
     try {
       await p2p.pubsub.publish('zero.keepers', fromJSONtoBuffer({ address: (await p2p.addressPromise) }));
+      logger.info('broadcasting zero.keepers');
     } catch (e) { console.error(e); }
   }, KEEPER_INTERVAL);
   return function unsubscribe() { clearInterval(interval) };

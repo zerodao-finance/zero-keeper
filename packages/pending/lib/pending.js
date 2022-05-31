@@ -3,7 +3,9 @@
 const {
   UnderwriterTransferRequest,
 } = require("zero-protocol/dist/lib/UnderwriterRequest");
+const ethers = require('ethers');
 const { Networks, Opcode, Script } = require("bitcore-lib");
+const util = require('util');
 const { RenJS } = require("@renproject/ren");
 const { getUTXOs } =
   require("send-crypto/build/main/handlers/BTC/BTCHandler").BTCHandler;
@@ -15,7 +17,7 @@ const encodeTransferRequestLoan = (transferRequest) => {
     "function loan(address, address, uint256, uint256, address, bytes, bytes)",
   ]);
   return contractInterface.encodeFunctionData("loan", [
-    transferRequest.destination(),
+    new UnderwriterTransferRequest(transferRequest).destination(),
     transferRequest.asset,
     transferRequest.amount,
     transferRequest.pNonce,
@@ -32,7 +34,7 @@ const computePHash = (transferRequest) => {
       ethers.utils.defaultAbiCoder.encode(
         ["address", "uint256", "address", "bytes"],
         [
-          transferRequest.destination(),
+          new UnderwriterTransferRequest(transferRequest).destination(),
           transferRequest.pNonce,
           transferRequest.module,
           transferRequest.data,
@@ -42,25 +44,34 @@ const computePHash = (transferRequest) => {
   );
 };
 
+const { generateSHash, generateGHash } = require('@renproject/utils/build/main/renVMHashes');
+
+const toSelector = (address) => {
+  return 'BTC0Btc2Eth'; // TODO: implement switch over all networks
+};
+
+const toSourceAsset = (transferRequest) => {
+  return '0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D'; // TODO: implement other assets and different chains
+};
+
+const ln = (v) => ((console.log(v)), v);
 const computeGHash = (transferRequest) => {
-  return ethers.utils.solidityKeccak256(
-    ["bytes32", "address", "address", "bytes32"],
-    [
+  return ln(ethers.utils.solidityKeccak256(['bytes'], [ethers.utils.defaultAbiCoder.encode(["bytes32", "address", "address", "bytes32"], ln([
       computePHash(transferRequest),
-      transferRequest.asset,
-      transferRequest.destination(),
+      toSourceAsset(transferRequest),
+      transferRequest.contractAddress,
       transferRequest.nonce,
-    ]
-  );
+    ])) ]));
 };
 
 const addHexPrefix = (s) => (s.substr(0, 2) === "0x" ? s : "0x" + s);
 
 const stripHexPrefix = (s) => (s.substr(0, 2) === "0x" ? s.substr(2) : s);
 
+/*
 const computeGatewayAddress = (transferRequest, mpkh) =>
   new Script()
-    .add(Buffer.from(stripHexPrefix(computeGHash(g)), "hex"))
+    .add(Buffer.from(stripHexPrefix(computeGHash(transferRequest)), "hex"))
     .add(Opcode.OP_DROP)
     .add(Opcode.OP_DUP)
     .add(Opcode.OP_HASH160)
@@ -70,6 +81,11 @@ const computeGatewayAddress = (transferRequest, mpkh) =>
     .toScriptHashOut()
     .toAddress(false)
     .toString();
+
+*/
+
+const { BitcoinClass } = require('@renproject/chains-bitcoin/build/main/bitcoin');
+const computeGatewayAddress = (transferRequest, mpkh) => new BitcoinClass('mainnet').getGatewayAddress('BTC', Buffer.from(mpkh.substr(2), 'hex'), Buffer.from(computeGHash(transferRequest), 'hex'));
 
 const getBTCBlockNumber = async () => 0; // unused anyway
 const CONTROLLER_DEPLOYMENTS = {
@@ -87,33 +103,43 @@ const getChainId = (request) => {
   );
 };
 
+const lodash = require('lodash');
+
+const seen = {};
+const logGatewayAddress = (logger, v) => {
+  if (!seen[v]) logger.info('gateway: ' + v);
+  seen[v] = true;
+};
+
 const PendingProcess = (exports.PendingProcess = class PendingProcess {
-  constructor({ redis, mpkh }) {
+  constructor({ redis, logger, mpkh }) {
     this.redis = redis;
-    this.mpkh = Promise.resolve(mpkh) || ren.selectPublicKey(); // TODO: figure out the right RenJS function to call to get mpkh
+    this.logger = logger;
+    this.mpkh = mpkh && Promise.resolve(mpkh) || ren.renVM.selectPublicKey('BTC'); // TODO: figure out the right RenJS function to call to get mpkh
   }
-  async start() {
-    if (true) {
-      await this.run()
-      await this.start()
-    }
+  async runLoop() {
+    await this.run()
   }
 
   async run() {
-    const mpkh = await this.mpkh;
+    const mpkh = ethers.utils.hexlify(await this.mpkh);
+    this.logger.info('mpkh: ' + mpkh);
     // process first item in list
     if ( await this.redis.llen('/zero/pending') > 0) {
       try {
         const item = await this.redis.lindex("/zero/pending", 0);
         const transferRequest = JSON.parse(item);
         const gatewayAddress = computeGatewayAddress(transferRequest, mpkh);
+        logGatewayAddress(this.logger, gatewayAddress);
         const blockNumber = await getBTCBlockNumber();
-        const utxos = await getUTXOs({
+        const utxos = await getUTXOs(false, {
           address: gatewayAddress,
           confirmations: 1
         });
         
         if ( utxos && utxos.length) {
+          this.logger.info('got UTXO');
+          this.logger.info(util.inspect(utxos, { colors: true, depth: 15 }));
           await this.redis.ldel("/zero/pending", 0);
           if (
             transferRequest.contractAddress !==
@@ -134,11 +160,13 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
               return
             }
           } catch (error) {
-            return // handle error here
+            return this.logger.error(error);
           }
     }
     // rotate the list
-    this.redis.blmove("/zero/pending", "/zero/pending", 'LEFT', 'RIGHT', 0) 
+    await this.redis.blmove("/zero/pending", "/zero/pending", 'LEFT', 'RIGHT', 0) 
+    await this.timeout(5000);;
+    await this.run();
   }
 
   async timeout(ms) {

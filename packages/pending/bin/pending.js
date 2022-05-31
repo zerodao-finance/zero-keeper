@@ -6,8 +6,9 @@ const logger = createLogger(require('../package').name);
 
 (async () => {
   const pendingProcess = new PendingProcess({
-    redis
+    redis,
+    logger
   });
   logger.info('pending process started');
-  await pendingProcess.start();
+  await pendingProcess.runLoop();
 })().catch(console.error);
