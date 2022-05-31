@@ -1,7 +1,7 @@
 "use strict";
 
 // only run one of these
-import { UnderwriterTransferRequest } from 'zero-protocol/dist/lib/zero'
+const { UnderwriterTransferRequest } =  require('zero-protocol/dist/lib/zero');
 const encodeTransferRequestRepay = (transferRequest, queryResult) => {
   const contractInterface = new ethers.utils.Interface([
     "function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)",
@@ -35,40 +35,78 @@ const getChainId = (request) => {
 };
 
 const WatcherProcess = (exports.WatcherProcess = class WatcherProcess {
+  Error = false
   constructor({ logger, redis }) {
     Object.assign(this, {
       logger,
       redis,
     });
   }
-  async runLoop() {
-    while (true) {
-      try {
-        if (!(await this.redis.llen('/zero/watch'))) {
-          await this.timeout(1000);
-          continue;
-        }
-        const { request } = await this.redis.lindex("/zero/watch", 0);
-        const transferRequest = new UnderwriterTransferRequest(request);
-        const { signature, amount, nHash, pHash } =
-          await transferRequest.waitForSignature();
-        await this.redis.rpush("/zero/dispatch", {
-          to: transferRequest.contractAddress,
-          data: encodeTransferRequestRepay(transferRequest, {
-            signature,
-            amount,
-            nHash,
-            pHash,
-          }),
-          chainId: getChainId(transferRequest),
-        });
-        await this.redis.ldel("/zero/watch", 0);
-      } catch (e) {
-        this.logger.error(e);
-      }
+
+  async run() {
+    const { request } = await this.redis.blpop("/zero/watch", 0, console.log);
+    console.log("poped", request)
+    try {
+      const transferRequest = new UnderwriterTransferRequest(request);
+      const { signature, amount, nHash, pHash } = await transferRequest.waitForSignature();
+    } catch (error) {
+      this.logger.error(error)
+      return
+    }
+
+    try {
+      console.log(transferRequest)
+     await this.redis.rpush("/zero/dispatch", {
+       to: transferRequest.contractAddress,
+       data: encodeTransferRequestRepay(transferRequest, {
+         signature,
+         amount,
+         nHash,
+         pHash
+       }),
+       chainId: getChainId(transferRequest)
+     }); 
+    } catch (error) {
+      this.logger.error(error)
+      return
+    }    
+  }
+  
+  async start() {
+    if ( !this.Error ) {
+      await this.run()
+      this.start()
     }
   }
-  async timeout(ms) {
-    await new Promise((resolve) => setTimeout(resolve, ms));
-  }
+
+  // async runLoop() {
+  //   while (true) {
+  //     try {
+  //       if (!(await this.redis.llen('/zero/watch'))) {
+  //         await this.timeout(1000);
+  //         continue;
+  //       }
+  //       const { request } = await this.redis.lindex("/zero/watch", 0);
+  //       const transferRequest = new UnderwriterTransferRequest(request);
+  //       const { signature, amount, nHash, pHash } =
+  //         await transferRequest.waitForSignature();
+  //       await this.redis.rpush("/zero/dispatch", {
+  //         to: transferRequest.contractAddress,
+  //         data: encodeTransferRequestRepay(transferRequest, {
+  //           signature,
+  //           amount,
+  //           nHash,
+  //           pHash,
+  //         }),
+  //         chainId: getChainId(transferRequest),
+  //       });
+  //       await this.redis.ldel("/zero/watch", 0);
+  //     } catch (e) {
+  //       this.logger.error(e);
+  //     }
+  //   }
+  // }
+  // async timeout(ms) {
+  //   await new Promise((resolve) => setTimeout(resolve, ms));
+  // }
 });

@@ -5,5 +5,5 @@ const redis = new (require('ioredis'))();
   const pendingProcess = new PendingProcess({
     redis
   });
-  await pendingProcess.runLoop();
+  await pendingProcess.start();
 })().catch(console.error);

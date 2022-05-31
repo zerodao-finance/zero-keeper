@@ -92,52 +92,101 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
     this.redis = redis;
     this.mpkh = Promise.resolve(mpkh) || ren.selectPublicKey(); // TODO: figure out the right RenJS function to call to get mpkh
   }
+  async start() {
+    if (true) {
+      await this.run()
+      await this.start()
+    }
+  }
+
+  async run() {
+    const mpkh = await this.mpkh;
+    // process first item in list
+    if ( await this.redis.llen('/zero/pending') > 0) {
+      try {
+        const item = await this.redis.lindex("/zero/pending", 0);
+        const transferRequest = JSON.parse(item);
+        const gatewayAddress = computeGatewayAddress(transferRequest, mpkh);
+        const blockNumber = await getBTCBlockNumber();
+        const utxos = await getUTXOs({
+          address: gatewayAddress,
+          confirmations: 1
+        });
+        
+        if ( utxos && utxos.length) {
+          await this.redis.ldel("/zero/pending", 0);
+          if (
+            transferRequest.contractAddress !==
+            BadgerBridgeZeroController.address
+            )
+            await this.redis.lpush("/zero/dispatch", {
+              to: transferRequest.contractAddress,
+              data: encodeTransferRequestLoan(transferRequest),
+              chainId: getChainId(transferRequest),
+            }); 
+            await this.redis.rpush(
+              "/zero/watch",
+              JSON.stringify({
+                blockNumber,
+                transferRequest,
+              })
+              );
+              return
+            }
+          } catch (error) {
+            return // handle error here
+          }
+    }
+    // rotate the list
+    this.redis.blmove("/zero/pending", "/zero/pending", 'LEFT', 'RIGHT', 0) 
+  }
+
   async timeout(ms) {
     return await new Promise((resolve) => setTimeout(resolve, ms));
   }
-  async runLoop() {
-    const mpkh = await this.mpkh;
-    const length = await this.redis.llen("/zero/pending");
-    while (true) {
-      try {
-        for (let i = 0; i < length; i++) {
-          const item = await this.redis.lindex("/zero/pending", i);
-          try {
-            const transferRequest = JSON.parse(item);
-            const gatewayAddress = computeGatewayAddress(transferRequest, mpkh);
-            const blockNumber = await getBTCBlockNumber(); // TODO: implement getBTCBlockNumber using blockdaemon shared node
-            const utxos = await getUTXOs({
-              address: gatewayAddress,
-              confirmations: 1,
-            });
-            if (utxos && utxos.length) {
-              await this.redis.ldel("/zero/pending", i);
-              if (
-                transferRequest.contractAddress !==
-                BadgerBridgeZeroController.address
-              )
-                await this.redis.lpush("/zero/dispatch", {
-                  to: transferRequest.contractAddress,
-                  data: encodeTransferRequestLoan(transferRequest),
-                  chainId: getChainId(transferRequest),
-                }); // TODO: implement encodeTransferRequestLoan
-              await this.redis.rpush(
-                "/zero/watch",
-                JSON.stringify({
-                  blockNumber,
-                  transferRequest,
-                })
-              );
-            }
-          } catch (e) {
-            this.logger.error(e);
-          }
-          await this.timeout(500); // Probably won't get rate limited
-        }
-        await this.timeout(500);
-      } catch (e) {
-        this.logger.error(e);
-      }
-    }
-  }
+  // async runLoop() {
+  //   const mpkh = await this.mpkh;
+  //   const length = await this.redis.llen("/zero/pending");
+  //   while (true) {
+  //     try {
+  //       for (let i = 0; i < length; i++) {
+  //         const item = await this.redis.lindex("/zero/pending", i);
+  //         try {
+  //           const transferRequest = JSON.parse(item);
+  //           const gatewayAddress = computeGatewayAddress(transferRequest, mpkh);
+  //           const blockNumber = await getBTCBlockNumber(); // TODO: implement getBTCBlockNumber using blockdaemon shared node
+  //           const utxos = await getUTXOs({
+  //             address: gatewayAddress,
+  //             confirmations: 1,
+  //           });
+  //           if (utxos && utxos.length) {
+  //             await this.redis.ldel("/zero/pending", i);
+  //             if (
+  //               transferRequest.contractAddress !==
+  //               BadgerBridgeZeroController.address
+  //             )
+  //               await this.redis.lpush("/zero/dispatch", {
+  //                 to: transferRequest.contractAddress,
+  //                 data: encodeTransferRequestLoan(transferRequest),
+  //                 chainId: getChainId(transferRequest),
+  //               }); // TODO: implement encodeTransferRequestLoan
+  //             await this.redis.rpush(
+  //               "/zero/watch",
+  //               JSON.stringify({
+  //                 blockNumber,
+  //                 transferRequest,
+  //               })
+  //             );
+  //           }
+  //         } catch (e) {
+  //           this.logger.error(e);
+  //         }
+  //         await this.timeout(500); // Probably won't get rate limited
+  //       }
+  //       await this.timeout(500);
+  //     } catch (e) {
+  //       this.logger.error(e);
+  //     }
+  //   }
+  // }
 });

@@ -10,7 +10,6 @@ exports.advertiseAsKeeper = async (p2p) => {
   const interval = setInterval(async () => {
     try {
       await p2p.pubsub.publish('zero.keepers', fromJSONtoBuffer({ address: (await p2p.addressPromise) }));
-      console.log(`advertising self as keeper: ${await p2p.addressPromise}`)
     } catch (e) { console.error(e); }
   }, KEEPER_INTERVAL);
   return function unsubscribe() { clearInterval(interval) };
