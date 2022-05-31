@@ -13,5 +13,6 @@ const { WatcherProcess } = require('../lib/watcher');
     redis,
     logger
   });
+  logger.info('watcher process started');
   await watcherProcess.start();
 })().catch(console.error);

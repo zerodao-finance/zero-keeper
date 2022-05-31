@@ -13,6 +13,7 @@ const RPC_ENDPOINTS = {
 };
 
 const packageJson = require('../package');
+const util = require('util');
 const { createLogger } = require('@zerodao/logger');
 
 const logger = createLogger(packageJson.name);
@@ -43,9 +44,14 @@ const encodeBurnRequest = (request) => {
   
   await peer.start()
   handleRequests(peer);
+  peer.on('peer:discovery', (peerInfo) => {
+    logger.info('peer:discovery');
+    logger.info(JSON.stringify(peerInfo, null, 2));
+  });
   peer.on('zero:request', async (data) => {
     try {
       const request = JSON.parse(data);
+      logger.info(util.inspect(request, { colors: true, depth: 2 }));
       if (typeof request.destination === 'string') {
         await redis.lpush('/zero/dispatch', JSON.stringify({
           to: ethers.utils.getAddress(request.contractAddress),
