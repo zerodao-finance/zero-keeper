@@ -27,6 +27,16 @@ const encodeTransferRequestLoan = (transferRequest) => {
   ]);
 };
 
+const cache = {};
+const getGateway = async (request) => {
+  const { nonce } = request;
+  if (cache[nonce]) return cache[nonce];
+  else {
+    cache[nonce] = await new UnderwriterTransferRequest(request).submitToRenVM();
+    return cache[nonce];
+  }
+};
+
 const computePHash = (transferRequest) => {
   return ethers.utils.solidityKeccak256(
     ["bytes"],
@@ -129,11 +139,11 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
       try {
         const item = await this.redis.lindex("/zero/pending", 0);
         const transferRequest = JSON.parse(item);
-        const gatewayAddress = computeGatewayAddress(transferRequest, mpkh);
-        logGatewayAddress(this.logger, gatewayAddress);
+        const gateway = await getGateway(transferRequest);
+        logGatewayAddress(this.logger, gateway.gatewayAddress);
         const blockNumber = await getBTCBlockNumber();
         const utxos = await getUTXOs(false, {
-          address: gatewayAddress,
+          address: gateway.gatewayAddress,
           confirmations: 1
         });
         

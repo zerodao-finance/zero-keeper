@@ -6,6 +6,7 @@ const { Dispatcher } = require('../lib/dispatcher');
   const wallet = (process.env.WALLET ? new ethers.Wallet(process.env.WALLET) : ethers.Wallet.createRandom());
   await new Dispatcher({
     redis,
-    signer: wallet
+    signer: wallet,
+    gasLimit: 8e5
   }).runLoop();
 })().catch(console.error);
