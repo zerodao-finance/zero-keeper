@@ -3,9 +3,9 @@
 const {
   UnderwriterTransferRequest,
 } = require("zero-protocol/dist/lib/UnderwriterRequest");
-const ethers = require('ethers');
+const ethers = require("ethers");
 const { Networks, Opcode, Script } = require("bitcore-lib");
-const util = require('util');
+const util = require("util");
 const { RenJS } = require("@renproject/ren");
 const { getUTXOs } =
   require("send-crypto/build/main/handlers/BTC/BTCHandler").BTCHandler;
@@ -32,7 +32,9 @@ const getGateway = async (request) => {
   const { nonce } = request;
   if (cache[nonce]) return cache[nonce];
   else {
-    cache[nonce] = await new UnderwriterTransferRequest(request).submitToRenVM();
+    cache[nonce] = await new UnderwriterTransferRequest(
+      request
+    ).submitToRenVM();
     return cache[nonce];
   }
 };
@@ -54,24 +56,37 @@ const computePHash = (transferRequest) => {
   );
 };
 
-const { generateSHash, generateGHash } = require('@renproject/utils/build/main/renVMHashes');
+const {
+  generateSHash,
+  generateGHash,
+} = require("@renproject/utils/build/main/renVMHashes");
 
 const toSelector = (address) => {
-  return 'BTC0Btc2Eth'; // TODO: implement switch over all networks
+  return "BTC0Btc2Eth"; // TODO: implement switch over all networks
 };
 
 const toSourceAsset = (transferRequest) => {
-  return '0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D'; // TODO: implement other assets and different chains
+  return "0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D"; // TODO: implement other assets and different chains
 };
 
-const ln = (v) => ((console.log(v)), v);
+const ln = (v) => (console.log(v), v);
 const computeGHash = (transferRequest) => {
-  return ln(ethers.utils.solidityKeccak256(['bytes'], [ethers.utils.defaultAbiCoder.encode(["bytes32", "address", "address", "bytes32"], ln([
-      computePHash(transferRequest),
-      toSourceAsset(transferRequest),
-      transferRequest.contractAddress,
-      transferRequest.nonce,
-    ])) ]));
+  return ln(
+    ethers.utils.solidityKeccak256(
+      ["bytes"],
+      [
+        ethers.utils.defaultAbiCoder.encode(
+          ["bytes32", "address", "address", "bytes32"],
+          ln([
+            computePHash(transferRequest),
+            toSourceAsset(transferRequest),
+            transferRequest.contractAddress,
+            transferRequest.nonce,
+          ])
+        ),
+      ]
+    )
+  );
 };
 
 const addHexPrefix = (s) => (s.substr(0, 2) === "0x" ? s : "0x" + s);
@@ -94,8 +109,15 @@ const computeGatewayAddress = (transferRequest, mpkh) =>
 
 */
 
-const { BitcoinClass } = require('@renproject/chains-bitcoin/build/main/bitcoin');
-const computeGatewayAddress = (transferRequest, mpkh) => new BitcoinClass('mainnet').getGatewayAddress('BTC', Buffer.from(mpkh.substr(2), 'hex'), Buffer.from(computeGHash(transferRequest), 'hex'));
+const {
+  BitcoinClass,
+} = require("@renproject/chains-bitcoin/build/main/bitcoin");
+const computeGatewayAddress = (transferRequest, mpkh) =>
+  new BitcoinClass("mainnet").getGatewayAddress(
+    "BTC",
+    Buffer.from(mpkh.substr(2), "hex"),
+    Buffer.from(computeGHash(transferRequest), "hex")
+  );
 
 const getBTCBlockNumber = async () => 0; // unused anyway
 const CONTROLLER_DEPLOYMENTS = {
@@ -113,11 +135,11 @@ const getChainId = (request) => {
   );
 };
 
-const lodash = require('lodash');
+const lodash = require("lodash");
 
 const seen = {};
 const logGatewayAddress = (logger, v) => {
-  if (!seen[v]) logger.info('gateway: ' + v);
+  if (!seen[v]) logger.info("gateway: " + v);
   seen[v] = true;
 };
 
@@ -125,59 +147,58 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
   constructor({ redis, logger, mpkh }) {
     this.redis = redis;
     this.logger = logger;
-    this.mpkh = mpkh && Promise.resolve(mpkh) || ren.renVM.selectPublicKey('BTC'); // TODO: figure out the right RenJS function to call to get mpkh
+    this.mpkh =
+      (mpkh && Promise.resolve(mpkh)) || ren.renVM.selectPublicKey("BTC"); // TODO: figure out the right RenJS function to call to get mpkh
   }
   async runLoop() {
-    await this.run()
+    while (true) {
+      await this.run();
+      await this.timeout(1000);
+    }
   }
-
   async run() {
     const mpkh = ethers.utils.hexlify(await this.mpkh);
-    this.logger.info('mpkh: ' + mpkh);
     // process first item in list
-    if ( await this.redis.llen('/zero/pending') > 0) {
+    const len = await this.redis.llen("/zero/pending");
+    for (let i = 0; i < len; i++) {
       try {
-        const item = await this.redis.lindex("/zero/pending", 0);
+        const item = await this.redis.lindex("/zero/pending", i);
         const transferRequest = JSON.parse(item);
         const gateway = await getGateway(transferRequest);
         logGatewayAddress(this.logger, gateway.gatewayAddress);
         const blockNumber = await getBTCBlockNumber();
         const utxos = await getUTXOs(false, {
           address: gateway.gatewayAddress,
-          confirmations: 1
+          confirmations: 1,
         });
-        
-        if ( utxos && utxos.length) {
-          this.logger.info('got UTXO');
+
+        if (utxos && utxos.length) {
+          this.logger.info("got UTXO");
           this.logger.info(util.inspect(utxos, { colors: true, depth: 15 }));
-          await this.redis.ldel("/zero/pending", 0);
           if (
-            transferRequest.contractAddress !==
-            BadgerBridgeZeroController.address
-            )
-            await this.redis.lpush("/zero/dispatch", {
+            !CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(transferRequest.contractAddress)]
+          )
+            await this.redis.lpush("/zero/dispatch", JSON.stringify({
               to: transferRequest.contractAddress,
               data: encodeTransferRequestLoan(transferRequest),
               chainId: getChainId(transferRequest),
-            }); 
-            await this.redis.rpush(
-              "/zero/watch",
-              JSON.stringify({
-                blockNumber,
-                transferRequest,
-              })
-              );
-              return
-            }
-          } catch (error) {
-            return this.logger.error(error);
-          }
+            }));
+          await this.redis.rpush(
+            "/zero/watch",
+            JSON.stringify({
+              blockNumber,
+              transferRequest,
+            })
+          );
+          await this.redis.lpop("/zero/pending");
+        }
+      } catch (error) {
+        return this.logger.error(error);
+      }
+      await this.timeout(1000);
     }
-    // rotate the list
-    await this.redis.blmove("/zero/pending", "/zero/pending", 'LEFT', 'RIGHT', 0) 
-    await this.timeout(5000);;
-    await this.run();
   }
+  // rotate the list
 
   async timeout(ms) {
     return await new Promise((resolve) => setTimeout(resolve, ms));

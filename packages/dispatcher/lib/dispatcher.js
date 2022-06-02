@@ -60,12 +60,13 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
 	}
 	const tx = JSON.parse(txSerialized);
         this.logger.info('dispatching tx');
+	      console.log('signer', this.getSigner(tx.chainId));
         this.logger.info(util.inspect(tx, { colors: true, depth: 15 }));
         try {
           const dispatched = await (this.getSigner(tx.chainId)).sendTransaction({
             ...tx,
             chainId: undefined,
-            gasLimit: this.gasLimit
+            gasLimit: tx.chainId == 42161 ? undefined : this.gasLimit
 	  });
           this.logger.info('dispatched tx: ' + dispatched.hash);
         } catch (e) {

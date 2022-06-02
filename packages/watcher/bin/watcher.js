@@ -14,5 +14,5 @@ const { WatcherProcess } = require('../lib/watcher');
     logger
   });
   logger.info('watcher process started');
-  await watcherProcess.start();
+  await watcherProcess.runLoop();
 })().catch(console.error);
