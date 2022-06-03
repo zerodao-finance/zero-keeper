@@ -2,6 +2,7 @@
 
 // only run one of these
 const { UnderwriterTransferRequest } = require("zero-protocol/dist/lib/zero");
+const ethers = require('ethers');
 const encodeTransferRequestRepay = (transferRequest, queryResult) => {
   const contractInterface = new ethers.utils.Interface([
     "function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)",
@@ -51,7 +52,7 @@ const WatcherProcess = (exports.WatcherProcess = class WatcherProcess {
         const transferRequest = new UnderwriterTransferRequest(tr.transferRequest);
         const { signature, amount, nHash, pHash } =
           await transferRequest.waitForSignature();
-        await this.redis.rpush("/zero/dispatch", {
+        await this.redis.rpush("/zero/dispatch", JSON.stringify({
           to: transferRequest.contractAddress,
           data: encodeTransferRequestRepay(transferRequest, {
             signature,
@@ -60,7 +61,7 @@ const WatcherProcess = (exports.WatcherProcess = class WatcherProcess {
             pHash,
           }),
           chainId: getChainId(transferRequest),
-        });
+        }, null, 2));
         await this.redis.lpop("/zero/watch");
       }
     } catch (error) {

@@ -76,11 +76,14 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
 	}
       } catch (e) {
         this.logger.error(e);
-        await this.errorTimeout();
       }
+      await this.timeout(1000);
     }
   }
+  async timeout(ms) {
+    return await new Promise((resolve) => setTimeout(resolve, ms));
+  }
   async errorTimeout() {
-    await new Promise((resolve) => setTimeout(resolve, exports.ERROR_TIMEOUT));
+    await new Promise((resolve) => setTimeout(resolve, Dispatcher.ERROR_TIMEOUT));
   }
 };

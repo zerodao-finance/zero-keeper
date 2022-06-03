@@ -162,7 +162,7 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
     const len = await this.redis.llen("/zero/pending");
     for (let i = 0; i < len; i++) {
       try {
-        const item = await this.redis.lindex("/zero/pending", i);
+        const item = await this.redis.lindex("/zero/pending", 0);
         const transferRequest = JSON.parse(item);
         const gateway = await getGateway(transferRequest);
         logGatewayAddress(this.logger, gateway.gatewayAddress);
