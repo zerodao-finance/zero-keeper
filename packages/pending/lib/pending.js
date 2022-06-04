@@ -121,7 +121,7 @@ const computeGatewayAddress = (transferRequest, mpkh) =>
 
 const getBTCBlockNumber = async () => 0; // unused anyway
 const CONTROLLER_DEPLOYMENTS = {
-  "0x53f38bEA30fE6919e0475Fe57C2629f3D3754d1E": 42161,
+  "0x9880fCd5d42e8F4c2148f2c1187Df050BE3Dbd17": 42161,
   "0x85dAC4da6eB28393088CF65b73bA1eA30e7e3cab": 137,
   "0xa8BD3FfEbF92538b3b830DD5B2516A5111DB164D": 1,
 };
