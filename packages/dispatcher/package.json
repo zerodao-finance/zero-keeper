@@ -13,7 +13,8 @@
   "dependencies": {
     "ethers": "^5.6.7",
     "ethers-gasnow": "https://github.com/kungfuflex/ethers-gasnow",
-    "ethers-polygongastracker": "https://github.com/freelogstudio/ethers-polygongastracker"
+    "ethers-polygongastracker": "https://github.com/freelogstudio/ethers-polygongastracker",
+    "ethers-flashbots": "https://github.com/freelogstudio/ethers-flashbots"
   },
   "devDependencies": {
     "cross-env": "^7.0.3"

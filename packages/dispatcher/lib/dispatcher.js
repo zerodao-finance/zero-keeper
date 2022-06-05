@@ -5,11 +5,15 @@ const gasnow = require('ethers-gasnow');
 const packageJson = require('../package');
 const { createLogger } = require('@zerodao/logger');
 const ethers = require('ethers');
+const { makePrivateSigner } = require('ethers-flashbots');
 
 const RPC_ENDPOINTS = {
-  [42161]: 'https://arb1.arbitrum.io/rpc',
-  [137]: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
-  [1]: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+  // [42161]: 'https://arb1.arbitrum.io/rpc', original
+  // [137]: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2', infura
+  // [1]: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2', infura
+  [42161]: 'https://arb-mainnet.g.alchemy.com/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk',
+  [137]: 'https://polygon-mainnet.g.alchemyapi.io/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk',
+  [1]: 'https://eth-mainnet.alchemyapi.io/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk'
 };
 
 const ERROR_TIMEOUT = 1000;
@@ -39,7 +43,15 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
       return r;
     }, {});
     this.signers = Object.entries(this.constructor.RPC_ENDPOINTS).reduce((r, [ key, value ]) => {
-      r[key] = signer.connect(this.makeProvider(key));
+      _priv_signer = makePrivateSigner({
+        signer: signer.connect(this.makeProvider(key)),
+        getMaxBlockNumber: async ( signer, tx ) => {
+          return ethers.utils.hexlify(Number(await signer.provider.getBlockNumber()) + 100);
+        },
+        getPreferences: async () => ({ fast: true }) //default behavior
+      })
+      r[key] = signer.connect(_priv_signer)
+      // r[key] = signer.connect(this.makeProvider(key));
       return r;
     }, {});
   }
