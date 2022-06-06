@@ -43,7 +43,9 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
       return r;
     }, {});
     this.signers = Object.entries(this.constructor.RPC_ENDPOINTS).reduce((r, [ key, value ]) => {
-      r[key] = makePrivateSigner({ signer: signer.connect(this.makeProvider(key))})
+      const _priv_signer = makePrivateSigner({ signer: signer.connect(this.makeProvider(key))})
+      console.log(_priv_signer, _priv_signer.getAddress())
+      r[key] = _priv_signer 
       // r[key] = signer.connect(this.makeProvider(key));
       return r;
     }, {});
@@ -57,30 +59,31 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
   async runLoop() {
     this.logger.info('starting dispatch loop');
     while (true) {
+      const txSerialized = await this.redis.lpop('/zero/dispatch');
       try {
-        const txSerialized = await this.redis.lpop('/zero/dispatch');
         if (!txSerialized) {
           await this.errorTimeout();
           continue;
-	}
-	const tx = JSON.parse(txSerialized);
-        this.logger.info('dispatching tx');
-	      console.log('signer', this.getSigner(tx.chainId));
-        this.logger.info(util.inspect(tx, { colors: true, depth: 15 }));
-        try {
-          const dispatched = await (this.getSigner(tx.chainId)).sendTransaction({
-            ...tx,
-            chainId: undefined,
-            gasLimit: tx.chainId == 42161 ? undefined : this.gasLimit
-	  });
-          this.logger.info('dispatched tx: ' + dispatched.hash);
-        } catch (e) {
-          this.logger.error(e);
-          await this.redis.lpush('/zero/dispatch', tx);
-          await this.errorTimeout();
-	}
+        }
+        const tx = JSON.parse(txSerialized);
+              this.logger.info('dispatching tx');
+              console.log('signer', this.getSigner(tx.chainId));
+              this.logger.info(util.inspect(tx, { colors: true, depth: 15 }));
+              try {
+                const dispatched = await (this.getSigner(tx.chainId)).sendTransaction({
+                  ...tx,
+                  chainId: undefined,
+                  gasLimit: tx.chainId == 42161 ? undefined : this.gasLimit
+          });
+                this.logger.info('dispatched tx: ' + dispatched.hash);
+              } catch (e) {
+                this.logger.error(e);
+                await this.redis.lpush('/zero/dispatch', tx);
+                await this.errorTimeout();
+        }
       } catch (e) {
         this.logger.error(e);
+        await this.redis.rpush('/zero/dispatch', txSerialized)
       }
       await this.timeout(1000);
     }

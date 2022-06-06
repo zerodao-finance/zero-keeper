@@ -81,15 +81,17 @@ exports.ZeroP2P = class ZeroP2P extends Libp2p {
   static async peerIdFromSeed(seed) {
     return await PeerId.createFromPrivKey((await cryptoFromSeed(seed)).bytes);
   }
-  static async fromSeed({ signer, seed }) {
+  static async fromSeed({ signer, seed, multiaddr }) {
     return new this({
       peerId: await this.peerIdFromSeed(seed),
+      multiaddr,
       signer,
     });
   }
-  static async fromPassword({ signer, password }) {
+  static async fromPassword({ signer, multiaddr, password }) {
     return await this.fromSeed({
       signer,
+      multiaddr,
       seed: await signer.signMessage(this.toMessage(password)),
     });
   }
@@ -105,6 +107,7 @@ exports.ZeroP2P = class ZeroP2P extends Libp2p {
     const multiaddr = ZeroP2P.fromPresetOrMultiAddr(
       options.multiaddr || "mainnet"
     );
+    console.log("listening on", multiaddr)
     super({
       peerId: options.peerId,
       connectionManager: {

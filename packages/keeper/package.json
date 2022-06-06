@@ -5,7 +5,8 @@
   "main": "lib/zerop2p.js",
   "repository": "https://github.com/zerodao-finance/zero-keeper",
   "scripts": {
-    "start": "cross-env node bin/keeper"
+    "start": "SIGNALLING_SERVER='MAINNET' cross-env node bin/keeper",
+    "dev": "SIGNALLING_SERVER='DEV-MAINNET' cross-env node bin/keeper"
   },
   "author": "altinak",
   "license": "MIT",

@@ -37,9 +37,11 @@ const encodeBurnRequest = (request) => {
 (async () => {
   logger.info("keeper process started")
   const signer = new ethers.Wallet(process.env.WALLET).connect(new ethers.providers.InfuraProvider('mainnet', RPC_ENDPOINTS.ETHEREUM));
+  console.log(process.env.SIGNALLING_SERVER)
   const peer = await ZeroP2P.fromPassword({
     signer,
-    password: await signer.getAddress()
+    password: await signer.getAddress(), 
+    multiaddr: process.env.SIGNALLING_SERVER || "MAINNET"
   })
   
   await peer.start()
