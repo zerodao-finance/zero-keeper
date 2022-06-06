@@ -10,7 +10,12 @@ const { makePrivateSigner } = require('ethers-flashbots');
 const RPC_ENDPOINTS = {
   [42161]: 'https://arb-mainnet.g.alchemy.com/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk',
   [137]: 'https://polygon-mainnet.g.alchemyapi.io/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk',
-  [1]: 'https://eth-mainnet.alchemyapi.io/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk'
+  [1]: 'https://eth-mainnet.alchemyapi.io/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk',
+  [43114]: 'https://api.avax.network/ext/bc/C/rpc'
+};
+
+const NO_FLASHBOTS = {
+  [43114]: true
 };
 
 const ERROR_TIMEOUT = 1000;
@@ -40,7 +45,7 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
       return r;
     }, {});
     this.signers = Object.entries(this.constructor.RPC_ENDPOINTS).reduce((r, [ key, value ]) => {
-      r[key] = makePrivateSigner({ signer: signer.connect(this.makeProvider(key))});
+      r[key] = (NO_FLASHBOTS[key] ? (v) => v : (v) => makePrivateSigner({ signer: v, getMaxBlockNumber: async (signer) => ((await signer.provider.getBlockNumber()) + 10000) }))(signer.connect(this.makeProvider(key)));
       return r;
     }, {});
   }
