@@ -9,6 +9,7 @@ const RPC_ENDPOINTS = {
   ARBITRUM: 'https://arb1.arbitrum.io/rpc',
   MATIC: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
   ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+  AVALANCHE: '',
   local: 'http://localhost:8545'
 };
 
@@ -21,7 +22,8 @@ const logger = createLogger(packageJson.name);
 const CONTROLLER_DEPLOYMENTS = {
   "0x9880fCd5d42e8F4c2148f2c1187Df050BE3Dbd17": 42161,
   "0x85dAC4da6eB28393088CF65b73bA1eA30e7e3cab": 137,
-  "0xa8BD3FfEbF92538b3b830DD5B2516A5111DB164D": 1
+  "0xa8BD3FfEbF92538b3b830DD5B2516A5111DB164D": 1,
+  "0x1ec2Abe3F25F5d48567833Bf913f030Ec7a948Ba": 43114
 };
 
 const getChainId = (request) => {
