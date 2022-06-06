@@ -1,0 +1,17 @@
+{
+    "name": "@zerodao/test",
+    "version": "0.1.0",
+    "description": "test",
+    "main": "lib/test.js",
+    "scripts": {
+      "start": "cross-env node bin/test"
+    },
+    "repository": "https://github.com/zerodao-finance/zero-keeper",
+    "author": "zeroDAO",
+    "license": "MIT",
+    "private": false,
+    "devDependencies": {
+      "cross-env": "^7.0.3"
+    }
+  }
+  

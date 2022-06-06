@@ -43,14 +43,7 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
       return r;
     }, {});
     this.signers = Object.entries(this.constructor.RPC_ENDPOINTS).reduce((r, [ key, value ]) => {
-      _priv_signer = makePrivateSigner({
-        signer: signer.connect(this.makeProvider(key)),
-        getMaxBlockNumber: async ( signer, tx ) => {
-          return ethers.utils.hexlify(Number(await signer.provider.getBlockNumber()) + 100);
-        },
-        getPreferences: async () => ({ fast: true }) //default behavior
-      })
-      r[key] = signer.connect(_priv_signer)
+      r[key] = makePrivateSigner({ signer: signer.connect(this.makeProvider(key))})
       // r[key] = signer.connect(this.makeProvider(key));
       return r;
     }, {});
