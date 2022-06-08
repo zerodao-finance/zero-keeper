@@ -77,12 +77,12 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
                 this.logger.info('dispatched tx: ' + dispatched.hash);
               } catch (e) {
                 this.logger.error(e);
-                await this.redis.lpush('/zero/dispatch', tx);
+                await this.redis.lpush('/zero/dispatch', txSerialized);
                 await this.errorTimeout();
         }
       } catch (e) {
         this.logger.error(e);
-        await this.redis.rpush('/zero/dispatch', txSerialized)
+//        await this.redis.rpush('/zero/dispatch', txSerialized)
       }
       await this.timeout(1000);
     }
