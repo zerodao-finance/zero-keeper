@@ -144,10 +144,9 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
   async run() {
     const mpkh = ethers.utils.hexlify(await this.mpkh);
     // process first item in list
-    const len = await this.redis.llen("/zero/pending");
-    for (let i = 0; i < len; i++) {
+    for (let i = 0; i < await this.redis.llen('/zero/pending'); i++) {
       try {
-        const item = await this.redis.lindex("/zero/pending", 0);
+        const item = await this.redis.lindex("/zero/pending", i);
         const transferRequest = JSON.parse(item);
         const gateway = await getGateway(transferRequest);
         logGatewayAddress(this.logger, gateway.gatewayAddress);
@@ -175,7 +174,8 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
               transferRequest,
             })
           );
-          await this.redis.lpop("/zero/pending");
+          const removed = await this.redis.lrem("/zero/pending", 1, item);
+          if (removed) i--;
         }
       } catch (error) {
         return this.logger.error(error);
