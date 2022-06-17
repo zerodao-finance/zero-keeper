@@ -1,6 +1,7 @@
 "use strict";
 
 // only run one of these
+
 const { UnderwriterTransferRequest } = require("zero-protocol/dist/lib/zero");
 const ethers = require('ethers');
 const encodeTransferRequestRepay = (transferRequest, queryResult) => {
@@ -26,6 +27,7 @@ const CONTROLLER_DEPLOYMENTS = {
   "0xa8BD3FfEbF92538b3b830DD5B2516A5111DB164D": 1,
   "0x1ec2Abe3F25F5d48567833Bf913f030Ec7a948Ba": 43114
 };
+
 
 const getChainId = (request) => {
   return (

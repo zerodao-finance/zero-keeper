@@ -22,6 +22,8 @@ const ERROR_TIMEOUT = 1000;
 
 const util = require('util');
 
+const chainIdToPromise = {};
+
 const Dispatcher = exports.Dispatcher = class Dispatcher {
   static RPC_ENDPOINTS = RPC_ENDPOINTS;
   static ERROR_TIMEOUT = ERROR_TIMEOUT;
@@ -66,14 +68,15 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
         }
         const tx = JSON.parse(txSerialized);
               this.logger.info('dispatching tx');
-              console.log('signer', this.getSigner(tx.chainId));
               this.logger.info(util.inspect(tx, { colors: true, depth: 15 }));
               try {
+                await (chainIdToPromise[tx.chainId] || Promise.resolve());
                 const dispatched = await (this.getSigner(tx.chainId)).sendTransaction({
                   ...tx,
                   chainId: undefined,
                   gasLimit: tx.chainId == 42161 ? undefined : this.gasLimit
           });
+	        chainIdToPromise[tx.chainId] = dispatched.wait();
                 this.logger.info('dispatched tx: ' + dispatched.hash);
               } catch (e) {
                 this.logger.error(e);
