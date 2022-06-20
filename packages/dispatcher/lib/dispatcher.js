@@ -74,7 +74,7 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
                 const dispatched = await (this.getSigner(tx.chainId)).sendTransaction({
                   ...tx,
                   chainId: undefined,
-                  gasLimit: tx.chainId == 42161 ? undefined : this.gasLimit
+                  gasLimit: tx.chainId == 42161 ? undefined : tx.chainId === 43114 ? 15e5 : this.gasLimit
           });
 	        chainIdToPromise[tx.chainId] = dispatched.wait();
                 this.logger.info('dispatched tx: ' + dispatched.hash);
