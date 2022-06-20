@@ -8,14 +8,16 @@ const ethers = require('ethers');
 const { makePrivateSigner } = require('ethers-flashbots');
 
 const RPC_ENDPOINTS = {
-  [42161]: 'https://arb-mainnet.g.alchemy.com/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk',
+//  [42161]: 'https://arb-mainnet.g.alchemy.com/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk',
+  [42161]: 'https://arb1.arbitrum.io/rpc',
   [137]: 'https://polygon-mainnet.g.alchemyapi.io/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk',
   [1]: 'https://eth-mainnet.alchemyapi.io/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk',
   [43114]: 'https://api.avax.network/ext/bc/C/rpc'
 };
 
 const NO_FLASHBOTS = {
-  [43114]: true
+  [43114]: true,
+  [42161]: true
 };
 
 const ERROR_TIMEOUT = 1000;
