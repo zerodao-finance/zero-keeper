@@ -2,7 +2,6 @@ const {
     MatrixClient, 
     SimpleFsStorageProvider,
     AutojoinRoomsMixin,
-    RustSdkCryptoStorageProvder
 } = require("matrix-bot-sdk");
 const hash = require('object-hash');
 
@@ -10,7 +9,6 @@ const hash = require('object-hash');
 const MatrixBot = (exports.MatrixBot = class MatrixBot {
     constructor({ homeserverUrl, redis}) {
         const storage = new SimpleFsStorageProvider("mbot-storage.json")
-        const cryptoStorage = new RustSdkCryptoStorageProvder("mbot-crypto-storage.json")
         const client = new MatrixClient(homeserverUrl, process.env.MATRIX_BOT_KEY, storage, cryptoStorage)
         AutojoinRoomsMixin.setupOnClient(client);
 
