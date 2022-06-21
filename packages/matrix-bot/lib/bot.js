@@ -9,7 +9,7 @@ const hash = require('object-hash');
 const MatrixBot = (exports.MatrixBot = class MatrixBot {
     constructor({ homeserverUrl, redis}) {
         const storage = new SimpleFsStorageProvider("mbot-storage.json")
-        const client = new MatrixClient(homeserverUrl, process.env.MATRIX_BOT_KEY, storage, cryptoStorage)
+        const client = new MatrixClient(homeserverUrl, process.env.MATRIX_BOT_KEY, storage)
         AutojoinRoomsMixin.setupOnClient(client);
 
         Object.assign(this, {
