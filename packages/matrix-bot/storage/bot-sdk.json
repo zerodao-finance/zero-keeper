@@ -1,0 +1,23 @@
+{
+  "rooms": {
+    "2e7da09e762ecb19927989eb483041d49602c97fafa4f924df0d5e6d344707f45d71e5d59f0c467b38567aeb3f02b0212b737ffe23c0fa233a3ce34d40eeb028": {
+      "algorithm": "m.megolm.v1.aes-sha2"
+    },
+    "2229bef09b72635870b54823f6ab7794c82f9e3e2331404587bdb532476a09ec5f27edec071a58a57080e5beef99e810d9ab0dd16964bf0e0f181394ecf91a9b": {
+      "algorithm": "m.megolm.v1.aes-sha2"
+    },
+    "577ffe96b351de765f854f1c7a8fa226aaa35e5f74b523cf1ce16582652cc967fc75ac6ae19555c0eeb305f7c1cd963169ea347e7a77ac1e14a92ef6afa16d0b": {
+      "algorithm": "m.megolm.v1.aes-sha2"
+    },
+    "803756ccd255f88464c824ac4d5bb0b52234af4901be824447b3ac5eac7cdae4d3c484b0247f448580b66fcb73eded1a8222bf04769cbb912d79e0de1e31fce1": {
+      "algorithm": "m.megolm.v1.aes-sha2"
+    },
+    "e876decf2a5729327adbbc52560233c7a5d3df1978695341d647217efc0042bc4a1fb0e982198d4b72b357f99729fc151ac3396776968245fb039ea8040f9b85": {
+      "algorithm": "m.megolm.v1.aes-sha2"
+    },
+    "968faf86ea79a3096a68df16cbd1aef85c315e8e5b27cb8ea9d85f992619e8564005a7be7a90a0874b357563fbd23b2c4988bc287e526572689179f7ab77ebfc": {
+      "algorithm": "m.megolm.v1.aes-sha2"
+    }
+  },
+  "deviceId": "GYECVTUSTW"
+}

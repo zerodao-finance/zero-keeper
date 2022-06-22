@@ -12,6 +12,6 @@ class emptyRedis {
 
 ( async () => {
     let bot = new MatrixBot({homeserverUrl: 'https://matrix.zerodao.gg', redis: new emptyRedis()})
-    console.log(await bot.getMatrixInfo())
+    // console.log(await bot.getMatrixInfo())
     await bot.run()
 })();
