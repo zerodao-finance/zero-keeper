@@ -4,12 +4,17 @@ const gasnow = require('ethers-gasnow');
 const packageJson = require('../package');
 const { createLogger } = require('@zerodao/logger');
 const ethers = require('ethers');
+const polygongastracker = require('ethers-polygongastracker');
 const { makePrivateSigner } = require('ethers-flashbots');
+
+const getGasPricePolygon = polygongastracker.createGetGasPrice('rapid');
 
 const fixGetFeeData = (provider) => {
   const { getFeeData } = provider;
   provider.getFeeData = async function (...args) {
     const data = await getFeeData.call(this, ...args);
+    data.gasPrice = await getGasPricePolygon();
+    data.maxFeePerGas = data.gasPrice;
     data.maxPriorityFeePerGas = data.maxFeePerGas;
     return data;
   };
@@ -85,7 +90,7 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
                 const dispatched = await (this.getSigner(tx.chainId)).sendTransaction({
                   ...tx,
                   chainId: undefined,
-                  gasLimit: { [1]: 8e5, [43114]: 2e6, [137]: undefined, [42161]: undefined }[tx.chainId]
+                  gasLimit: { [1]: 8e5, [43114]: 2e6, [137]: 2e6, [42161]: undefined }[tx.chainId]
           });
 	        chainIdToPromise[tx.chainId] = dispatched.wait().catch((err) => this.logger.error(err));
                 this.logger.info('dispatched tx: ' + dispatched.hash);
