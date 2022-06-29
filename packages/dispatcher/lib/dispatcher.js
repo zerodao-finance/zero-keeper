@@ -1,11 +1,20 @@
 'use strict';
 
-const polygongastracker = require('ethers-polygongastracker');
 const gasnow = require('ethers-gasnow');
 const packageJson = require('../package');
 const { createLogger } = require('@zerodao/logger');
 const ethers = require('ethers');
 const { makePrivateSigner } = require('ethers-flashbots');
+
+const fixGetFeeData = (provider) => {
+  const { getFeeData } = provider;
+  provider.getFeeData = async function (...args) {
+    const data = await getFeeData.call(this, ...args);
+    data.maxPriorityFeePerGas = data.maxFeePerGas;
+    return data;
+  };
+  return provider;
+};
 
 const RPC_ENDPOINTS = {
   [42161]: 'https://arb-mainnet.g.alchemy.com/v2/utMr7YLZtnhmRySXim_DuF5QMl0HBwdA',
@@ -45,7 +54,7 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
     this.providers = Object.entries(this.constructor.RPC_ENDPOINTS).reduce((r, [ key, value ]) => {
       const provider = r[key] = new ethers.providers.JsonRpcProvider(value);
       if (key == 1) provider.getGasPrice = gasnow.createGetGasPrice('rapid');
-      else if (key == 137) provider.getGasPrice = polygongastracker.createGetGasPrice('rapid');
+      else if (key == 137) fixGetFeeData(provider);
       return r;
     }, {});
     this.signers = Object.entries(this.constructor.RPC_ENDPOINTS).reduce((r, [ key, value ]) => {
@@ -76,7 +85,7 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
                 const dispatched = await (this.getSigner(tx.chainId)).sendTransaction({
                   ...tx,
                   chainId: undefined,
-                  gasLimit: { [1]: 8e5, [43114]: 2e6, [137]: 8e5, [42161]: undefined }[tx.chainId]
+                  gasLimit: { [1]: 8e5, [43114]: 2e6, [137]: undefined, [42161]: undefined }[tx.chainId]
           });
 	        chainIdToPromise[tx.chainId] = dispatched.wait().catch((err) => this.logger.error(err));
                 this.logger.info('dispatched tx: ' + dispatched.hash);

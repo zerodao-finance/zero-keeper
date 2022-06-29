@@ -9134,7 +9134,7 @@ yauzl@^2.4.2:
 
 "zero-protocol@https://github.com/zerodao-finance/zero-protocol":
   version "0.1.0"
-  resolved "https://github.com/zerodao-finance/zero-protocol#851c6d59419d1fa6b747339e02ce3571eb2889c5"
+  resolved "https://github.com/zerodao-finance/zero-protocol#3ec2bf09537489b7c7d2091e0671d446615112eb"
   dependencies:
     "@0x/utils" "^6.4.3"
     "@ethersproject/bytes" "^5.4.0"
