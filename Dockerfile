@@ -6,6 +6,7 @@ RUN npm install -g yarn
 COPY yarn.lock .
 COPY packages .
 COPY package.json .
-COPY supervisord.conf .
 RUN yarn
-CMD ["/usr/bin/supervisord", "-c", "/app/supervisord.conf"]
+COPY supervisord.conf .
+CMD ["/usr/bin/node", "/app/packages/pending/bin/pending"]
+#CMD ["/usr/bin/supervisord", "-c", "/app/supervisord.conf"]
