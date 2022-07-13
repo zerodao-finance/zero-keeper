@@ -8,5 +8,4 @@ COPY packages .
 COPY package.json .
 RUN yarn
 COPY supervisord.conf .
-CMD ["/usr/bin/node", "/app/packages/pending/bin/pending"]
-#CMD ["/usr/bin/supervisord", "-c", "/app/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/app/supervisord.conf"]
