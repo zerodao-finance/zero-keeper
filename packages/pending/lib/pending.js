@@ -104,6 +104,7 @@ const computeGatewayAddress = (transferRequest, mpkh) =>
   );
 
 const getBTCBlockNumber = async () => 0; // unused anyway
+
 const CONTROLLER_DEPLOYMENTS = {
   "0x951E0dDe1fbe4AD1E9C027F46b653BAD2D99828d": 137,
   "0x9880fCd5d42e8F4c2148f2c1187Df050BE3Dbd17": 42161,
@@ -111,11 +112,15 @@ const CONTROLLER_DEPLOYMENTS = {
   "0x1ec2Abe3F25F5d48567833Bf913f030Ec7a948Ba": 43114
 };
 
-const getChainId = (request) => {
+const VAULT_DEPLOYMENTS = {
+  [ethers.constants.AddressZero]: 1337,
+};
+
+const getChainId = (request, deployments) => {
   return (
-    CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(request.contractAddress)] ||
+    deployments[ethers.utils.getAddress(request.contractAddress)] ||
     (() => {
-      throw Error("no controller found: " + request.contractAddress);
+      throw Error("no chain id found: " + request.contractAddress);
     })()
   );
 };
@@ -141,6 +146,7 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
       await this.timeout(1000);
     }
   }
+
   async run() {
     const mpkh = ethers.utils.hexlify(await this.mpkh);
     // process first item in list
@@ -161,12 +167,22 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
           this.logger.info(util.inspect(utxos, { colors: true, depth: 15 }));
           if (
             !CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(transferRequest.contractAddress)]
-          )
+          ) {
             await this.redis.lpush("/zero/dispatch", JSON.stringify({
               to: transferRequest.contractAddress,
               data: encodeTransferRequestLoan(transferRequest),
-              chainId: getChainId(transferRequest),
+              chainId: getChainId(transferRequest, CONTROLLER_DEPLOYMENTS),
             }));
+          }
+          
+          if(VAULT_DEPLOYMENTS[ethers.utils.getAddress(transferRequest.contractAddress)]) {
+            await this.redis.lpush("/zero/dispatch", JSON.stringify({
+              to: transferRequest.contractAddress,
+              data: encodeTransferRequestLoan(transferRequest),
+              chainId: getChainId(transferRequest, VAULT_DEPLOYMENTS),
+            }));
+          }
+
           await this.redis.rpush(
             "/zero/watch",
             JSON.stringify({
