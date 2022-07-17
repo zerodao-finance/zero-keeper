@@ -28,12 +28,15 @@ const CONTROLLER_DEPLOYMENTS = {
   "0x1ec2Abe3F25F5d48567833Bf913f030Ec7a948Ba": 43114
 };
 
+const VAULT_DEPLOYMENTS = {
+  [ethers.constants.AddressZero]: 1337,
+};
 
-const getChainId = (request) => {
+const getChainId = (request, deployments) => {
   return (
-    CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(request.contractAddress)] ||
+    deployments[ethers.utils.getAddress(request.contractAddress)] ||
     (() => {
-      throw Error("no controller found: " + request.contractAddress);
+      throw Error("no chain id found: " + request.contractAddress);
     })()
   );
 };
@@ -55,16 +58,35 @@ const WatcherProcess = (exports.WatcherProcess = class WatcherProcess {
         const transferRequest = new UnderwriterTransferRequest(tr.transferRequest);
         const { signature, amount, nHash, pHash } =
           await transferRequest.waitForSignature();
-        await this.redis.rpush("/zero/dispatch", JSON.stringify({
-          to: transferRequest.contractAddress,
-          data: encodeTransferRequestRepay(transferRequest, {
-            signature,
-            amount,
-            nHash,
-            pHash,
-          }),
-          chainId: getChainId(transferRequest),
-        }, null, 2));
+
+        if (
+          !CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(transferRequest.contractAddress)]
+        ) {
+          await this.redis.rpush("/zero/dispatch", JSON.stringify({
+            to: transferRequest.contractAddress,
+            data: encodeTransferRequestRepay(transferRequest, {
+              signature,
+              amount,
+              nHash,
+              pHash,
+            }),
+            chainId: getChainId(transferRequest, CONTROLLER_DEPLOYMENTS),
+          }, null, 2));
+        }
+
+        if(VAULT_DEPLOYMENTS[ethers.utils.getAddress(transferRequest.contractAddress)]) {
+          await this.redis.rpush("/zero/dispatch", JSON.stringify({
+            to: transferRequest.contractAddress,
+            data: encodeTransferRequestRepay(transferRequest, {
+              signature,
+              amount,
+              nHash,
+              pHash,
+            }),
+            chainId: getChainId(transferRequest, VAULT_DEPLOYMENTS),
+          }, null, 2));
+        }
+        
         await this.redis.lpop("/zero/watch");
       }
     } catch (error) {
