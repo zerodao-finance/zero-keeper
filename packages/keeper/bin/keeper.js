@@ -1,5 +1,5 @@
 const { ZeroP2P } = require('../lib/zerop2p');
-const { advertiseAsKeeper, handleRequests } = require('../lib/keeper');
+const { advertiseAsKeeper, handleRequestsV1, handleRequestsV2 } = require('../lib/keeper');
 const Redis = require('ioredis');
 const redis = new Redis()
 // const redis = require('ioredis')(process.env.REDIS_URI);
@@ -26,15 +26,37 @@ const CONTROLLER_DEPLOYMENTS = {
   "0x1ec2Abe3F25F5d48567833Bf913f030Ec7a948Ba": 43114
 };
 
-const getChainId = (request) => {
-  return CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(request.contractAddress)] || (() => { throw Error('no controller found: ' + request.contractAddress); })();
+const VAULT_DEPLOYMENTS = {
+  [ethers.constants.AddressZero]: 1337,
 };
 
+const getChainId = (request, deployments) => {
+  return deployments[ethers.utils.getAddress(request.contractAddress)] || (() => { throw Error('no chain id found: ' + request.contractAddress); })();
+};
 
 const encodeBurnRequest = (request) => {
   const contractInterface = new ethers.utils.Interface(['function burn(address, address, uint256, uint256, bytes, bytes, bytes)']);
   return contractInterface.encodeFunctionData('burn', [request.owner, request.asset, request.amount, request.deadline, request.data, request.destination, request.signature ]);
 };
+
+async function handleEvent(data, deployments) {
+  try {
+    const request = JSON.parse(data);
+    logger.info(util.inspect(request, { colors: true, depth: 2 }));
+    if (typeof request.destination === 'string') {
+      await redis.lpush('/zero/dispatch', JSON.stringify({
+        to: ethers.utils.getAddress(request.contractAddress),
+        chainId: getChainId(request, deployments),
+        data: encodeBurnRequest(request),
+      }, null, 2));
+    } else {
+      await redis.lpush('/zero/pending', JSON.stringify({...request, timestamp: new Date().getTime()}, null, 2));
+    }
+    await redis.lpush('/zero/request', data);
+  } catch (e) {
+    console.error(e);
+  }
+}
 
 (async () => {
   logger.info("keeper process started")
@@ -47,30 +69,25 @@ const encodeBurnRequest = (request) => {
   })
   
   await peer.start()
-  handleRequests(peer);
+
+  handleRequestsV1(p2p)
+  handleRequestsV2(p2p)
+
   peer.on('peer:discovery', (peerInfo) => {
     logger.info('peer:discovery');
     logger.info(JSON.stringify(peerInfo, null, 2));
   });
-  peer.on('zero:request', async (data) => {
-    try {
-      const request = JSON.parse(data);
-      logger.info(util.inspect(request, { colors: true, depth: 2 }));
-      if (typeof request.destination === 'string') {
-        await redis.lpush('/zero/dispatch', JSON.stringify({
-          to: ethers.utils.getAddress(request.contractAddress),
-          chainId: getChainId(request),
-          data: encodeBurnRequest(request),
-        }, null, 2));
-      } else {
-        await redis.lpush('/zero/pending', JSON.stringify(request, null, 2));
-      }
-      await redis.lpush('/zero/request', data);
-    } catch (e) {
-      console.error(e);
-    }
+
+  peer.on('zero:request:1.1.0', async (data) => {
+    await handleEvent(data, CONTROLLER_DEPLOYMENTS)
   });
+  
+  peer.on('zero:request:2.0.0', async (data) => {
+    await handleEvent(data, VAULT_DEPLOYMENTS)
+  });
+
   peer.on('error', logger.error.bind(logger));
+
   advertiseAsKeeper(peer);
 })().catch(logger.error.bind(logger));
 	
