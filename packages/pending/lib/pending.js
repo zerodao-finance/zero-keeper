@@ -14,16 +14,15 @@ const ren = new RenJS("mainnet");
 
 const encodeTransferRequestLoan = (transferRequest) => {
   const contractInterface = new ethers.utils.Interface([
-    "function loan(address, address, uint256, uint256, address, bytes, bytes)",
+    "function loan(address, address, uint256, uint256, bytes, bytes)",
   ]);
   return contractInterface.encodeFunctionData("loan", [
+    transferRequest.module,
     new UnderwriterTransferRequest(transferRequest).destination(),
-    transferRequest.asset,
     transferRequest.amount,
     transferRequest.pNonce,
-    transferRequest.module,
-    transferRequest.data,
     transferRequest.signature,
+    transferRequest.data,
   ]);
 };
 

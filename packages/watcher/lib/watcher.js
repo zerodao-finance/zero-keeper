@@ -6,19 +6,17 @@ const { UnderwriterTransferRequest } = require("zero-protocol/dist/lib/zero");
 const ethers = require('ethers');
 const encodeTransferRequestRepay = (transferRequest, queryResult) => {
   const contractInterface = new ethers.utils.Interface([
-    "function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)",
+    "function repay(address, address, uint256, uint256, address, bytes32, bytes, bytes)",
   ]);
   return contractInterface.encodeFunctionData("repay", [
     transferRequest.underwriter,
     transferRequest.destination(),
-    transferRequest.asset,
     transferRequest.amount,
-    queryResult.amount,
     transferRequest.pNonce,
     transferRequest.module,
     queryResult.nHash,
-    transferRequest.data,
     queryResult.signature,
+    transferRequest.data,
   ]);
 };
 const CONTROLLER_DEPLOYMENTS = {
