@@ -23,6 +23,7 @@ const fixGetFeeData = (provider) => {
 
 const RPC_ENDPOINTS = {
   [42161]: 'https://arb-mainnet.g.alchemy.com/v2/utMr7YLZtnhmRySXim_DuF5QMl0HBwdA',
+  [10]: 'https://mainnet.optimism.io',
   [137]: 'https://polygon-mainnet.g.alchemyapi.io/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk',
   [1]: 'https://eth-mainnet.alchemyapi.io/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk',
   [43114]: 'https://api.avax.network/ext/bc/C/rpc'
