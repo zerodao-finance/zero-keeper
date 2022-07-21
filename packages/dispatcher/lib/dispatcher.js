@@ -23,6 +23,7 @@ const fixGetFeeData = (provider) => {
 
 const RPC_ENDPOINTS = {
   [42161]: 'https://arb-mainnet.g.alchemy.com/v2/utMr7YLZtnhmRySXim_DuF5QMl0HBwdA',
+  [10]: 'https://mainnet.optimism.io',
   [137]: 'https://polygon-mainnet.g.alchemyapi.io/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk',
   [1]: 'https://eth-mainnet.alchemyapi.io/v2/gMO3S4SBWM72d94XKR4Hy2pbviLjmLqk',
   [43114]: 'https://api.avax.network/ext/bc/C/rpc'
@@ -90,7 +91,7 @@ const Dispatcher = exports.Dispatcher = class Dispatcher {
                 const dispatched = await (this.getSigner(tx.chainId)).sendTransaction({
                   ...tx,
                   chainId: undefined,
-                  gasLimit: { [1]: 8e5, [43114]: 2e6, [137]: 2e6, [42161]: undefined }[tx.chainId]
+                  gasLimit: { [1]: 8e5, [43114]: 2e6, [137]: 2e6, [42161]: undefined, [10]: undefined }[tx.chainId]
           });
 	        chainIdToPromise[tx.chainId] = dispatched.wait().catch((err) => this.logger.error(err));
                 this.logger.info('dispatched tx: ' + dispatched.hash);
