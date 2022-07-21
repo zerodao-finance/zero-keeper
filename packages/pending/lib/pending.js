@@ -12,21 +12,6 @@ const { getUTXOs } =
 
 const ren = new RenJS("mainnet");
 
-const encodeControllerTransferRequestLoan = (transferRequest) => {
-  const contractInterface = new ethers.utils.Interface([
-    "function loan(address, address, uint256, uint256, address, bytes, bytes)",
-  ]);
-  return contractInterface.encodeFunctionData("loan", [
-    new UnderwriterTransferRequest(transferRequest).destination(),
-    transferRequest.asset,
-    transferRequest.amount,
-    transferRequest.pNonce,
-    transferRequest.module,
-    transferRequest.data,
-    transferRequest.signature,
-  ]);
-};
-
 const encodeVaultTransferRequestLoan = (transferRequest) => {
   const contractInterface = new ethers.utils.Interface([
     "function loan(address, address, uint256, uint256, bytes)",
@@ -118,13 +103,6 @@ const computeGatewayAddress = (transferRequest, mpkh) =>
 
 const getBTCBlockNumber = async () => 0; // unused anyway
 
-const CONTROLLER_DEPLOYMENTS = {
-  "0x951E0dDe1fbe4AD1E9C027F46b653BAD2D99828d": 137,
-  "0x9880fCd5d42e8F4c2148f2c1187Df050BE3Dbd17": 42161,
-  "0xa8BD3FfEbF92538b3b830DD5B2516A5111DB164D": 1,
-  "0x1ec2Abe3F25F5d48567833Bf913f030Ec7a948Ba": 43114
-};
-
 const VAULT_DEPLOYMENTS = {
   [ethers.constants.AddressZero]: 1337,
 };
@@ -145,6 +123,8 @@ const logGatewayAddress = (logger, v) => {
   if (!seen[v]) logger.info("gateway: " + v);
   seen[v] = true;
 };
+
+const TIME_TO_EXPIRY_MS = 172800000
 
 const PendingProcess = (exports.PendingProcess = class PendingProcess {
   constructor({ redis, logger, mpkh }) {
@@ -167,6 +147,13 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
       try {
         const item = await this.redis.lindex("/zero/pending", i);
         const transferRequest = JSON.parse(item);
+
+        if(transferRequest.timestamp > new Date().getTime() + TIME_TO_EXPIRY_MS){
+          const removed = await this.redis.lrem("/zero/pending", 1, item);
+          if (removed) i--;
+          continue;
+        }
+
         const gateway = await getGateway(transferRequest);
         logGatewayAddress(this.logger, gateway.gatewayAddress);
         const blockNumber = await getBTCBlockNumber();
@@ -178,17 +165,10 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
         if (utxos && utxos.length) {
           this.logger.info("got UTXO");
           this.logger.info(util.inspect(utxos, { colors: true, depth: 15 }));
-          if (
-            !CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(transferRequest.contractAddress)]
-          ) {
-            await this.redis.lpush("/zero/dispatch", JSON.stringify({
-              to: transferRequest.contractAddress,
-              data: encodeControllerTransferRequestLoan(transferRequest),
-              chainId: getChainId(transferRequest, CONTROLLER_DEPLOYMENTS),
-            }));
-          }
           
-          if(VAULT_DEPLOYMENTS[ethers.utils.getAddress(transferRequest.contractAddress)]) {
+          const contractAddress = ethers.utils.getAddress(transferRequest.contractAddress)
+
+          if(VAULT_DEPLOYMENTS[contractAddress]) {
             await this.redis.lpush("/zero/dispatch", JSON.stringify({
               to: transferRequest.contractAddress,
               data: encodeVaultTransferRequestLoan(transferRequest),

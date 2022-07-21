@@ -77,8 +77,10 @@ const WatcherProcess = (exports.WatcherProcess = class WatcherProcess {
         const { signature, amount, nHash, pHash } =
           await transferRequest.waitForSignature();
 
+        const contractAddress = ethers.utils.getAddress(transferRequest.contractAddress)
+        
         if (
-          !CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(transferRequest.contractAddress)]
+          CONTROLLER_DEPLOYMENTS[contractAddress]
         ) {
           await this.redis.rpush("/zero/dispatch", JSON.stringify({
             to: transferRequest.contractAddress,
@@ -90,9 +92,7 @@ const WatcherProcess = (exports.WatcherProcess = class WatcherProcess {
             }),
             chainId: getChainId(transferRequest, CONTROLLER_DEPLOYMENTS),
           }, null, 2));
-        }
-
-        if(VAULT_DEPLOYMENTS[ethers.utils.getAddress(transferRequest.contractAddress)]) {
+        } else if(VAULT_DEPLOYMENTS[contractAddress]) {
           await this.redis.rpush("/zero/dispatch", JSON.stringify({
             to: transferRequest.contractAddress,
             data: encodeVaultTransferRequestRepay(transferRequest, {
