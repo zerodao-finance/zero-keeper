@@ -37,7 +37,7 @@ const pipeToString = async (stream) => {
 exports.handleRequestsV1 = (p2p) => {
   p2p.handle('/zero/1.1.0/dispatch', async (duplex) => {
     try { 
-      p2p.emit('zero:request', (await pipeToString(duplex.stream)));
+      p2p.emit('zero:request:1.1.0', (await pipeToString(duplex.stream)));
     } catch (e) { 
       p2p.emit('error', e); 
     }

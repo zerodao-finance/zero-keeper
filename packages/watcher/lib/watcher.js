@@ -4,21 +4,41 @@
 
 const { UnderwriterTransferRequest } = require("zero-protocol/dist/lib/zero");
 const ethers = require('ethers');
-const encodeTransferRequestRepay = (transferRequest, queryResult) => {
+
+const encodeControllerTransferRequestRepay = (transferRequest, queryResult) => {
   const contractInterface = new ethers.utils.Interface([
-    "function repay(address, address, uint256, uint256, address, bytes32, bytes, bytes)",
+    "function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)",
   ]);
   return contractInterface.encodeFunctionData("repay", [
     transferRequest.underwriter,
     transferRequest.destination(),
+    transferRequest.asset,
     transferRequest.amount,
+    queryResult.amount,
     transferRequest.pNonce,
     transferRequest.module,
     queryResult.nHash,
-    queryResult.signature,
     transferRequest.data,
+    queryResult.signature,
   ]);
 };
+
+const encodeVaultTransferRequestRepay = (transferRequest, queryResult) => {
+  const contractInterface = new ethers.utils.Interface([
+    "function repay(address, address, uint256, uint256, bytes, address, bytes32, bytes)",
+  ]);
+  return contractInterface.encodeFunctionData("repay", [
+    transferRequest.module,
+    transferRequest.destination(),
+    transferRequest.amount,
+    transferRequest.pNonce,
+    transferRequest.data,
+    transferRequest.underwriter,
+    queryResult.nHash,
+    queryResult.signature,
+  ]);
+};
+
 const CONTROLLER_DEPLOYMENTS = {
   "0x9880fCd5d42e8F4c2148f2c1187Df050BE3Dbd17": 42161,
   "0x951E0dDe1fbe4AD1E9C027F46b653BAD2D99828d": 137,
@@ -62,7 +82,7 @@ const WatcherProcess = (exports.WatcherProcess = class WatcherProcess {
         ) {
           await this.redis.rpush("/zero/dispatch", JSON.stringify({
             to: transferRequest.contractAddress,
-            data: encodeTransferRequestRepay(transferRequest, {
+            data: encodeControllerTransferRequestRepay(transferRequest, {
               signature,
               amount,
               nHash,
@@ -75,7 +95,7 @@ const WatcherProcess = (exports.WatcherProcess = class WatcherProcess {
         if(VAULT_DEPLOYMENTS[ethers.utils.getAddress(transferRequest.contractAddress)]) {
           await this.redis.rpush("/zero/dispatch", JSON.stringify({
             to: transferRequest.contractAddress,
-            data: encodeTransferRequestRepay(transferRequest, {
+            data: encodeVaultTransferRequestRepay(transferRequest, {
               signature,
               amount,
               nHash,

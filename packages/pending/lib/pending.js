@@ -12,16 +12,30 @@ const { getUTXOs } =
 
 const ren = new RenJS("mainnet");
 
-const encodeTransferRequestLoan = (transferRequest) => {
+const encodeControllerTransferRequestLoan = (transferRequest) => {
   const contractInterface = new ethers.utils.Interface([
-    "function loan(address, address, uint256, uint256, bytes, bytes)",
+    "function loan(address, address, uint256, uint256, address, bytes, bytes)",
+  ]);
+  return contractInterface.encodeFunctionData("loan", [
+    new UnderwriterTransferRequest(transferRequest).destination(),
+    transferRequest.asset,
+    transferRequest.amount,
+    transferRequest.pNonce,
+    transferRequest.module,
+    transferRequest.data,
+    transferRequest.signature,
+  ]);
+};
+
+const encodeVaultTransferRequestLoan = (transferRequest) => {
+  const contractInterface = new ethers.utils.Interface([
+    "function loan(address, address, uint256, uint256, bytes)",
   ]);
   return contractInterface.encodeFunctionData("loan", [
     transferRequest.module,
     new UnderwriterTransferRequest(transferRequest).destination(),
     transferRequest.amount,
     transferRequest.pNonce,
-    transferRequest.signature,
     transferRequest.data,
   ]);
 };
@@ -169,7 +183,7 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
           ) {
             await this.redis.lpush("/zero/dispatch", JSON.stringify({
               to: transferRequest.contractAddress,
-              data: encodeTransferRequestLoan(transferRequest),
+              data: encodeControllerTransferRequestLoan(transferRequest),
               chainId: getChainId(transferRequest, CONTROLLER_DEPLOYMENTS),
             }));
           }
@@ -177,7 +191,7 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
           if(VAULT_DEPLOYMENTS[ethers.utils.getAddress(transferRequest.contractAddress)]) {
             await this.redis.lpush("/zero/dispatch", JSON.stringify({
               to: transferRequest.contractAddress,
-              data: encodeTransferRequestLoan(transferRequest),
+              data: encodeVaultTransferRequestLoan(transferRequest),
               chainId: getChainId(transferRequest, VAULT_DEPLOYMENTS),
             }));
           }
