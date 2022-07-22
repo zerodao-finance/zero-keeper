@@ -34,11 +34,24 @@ const pipeToString = async (stream) => {
   });
 };
 
-exports.handleRequests = (p2p) => {
-   p2p.handle('/zero/1.1.0/dispatch', async (duplex) => {
+exports.handleRequestsV1 = (p2p) => {
+  p2p.handle('/zero/1.1.0/dispatch', async (duplex) => {
     try { 
-      p2p.emit('zero:request', (await pipeToString(duplex.stream)));
-    } catch (e) { p2p.emit('error', e); }
-   });
+      p2p.emit('zero:request:1.1.0', (await pipeToString(duplex.stream)));
+    } catch (e) { 
+      p2p.emit('error', e); 
+    }
+  });
 };
+
+exports.handleRequestsV2 = (p2p) => {
+	p2p.handle('/zero/2.0.0/dispatch', async (duplex) => {
+		try {
+			p2p.emit('zero:request:2.0.0', await pipeToString(duplex.stream));
+		} catch (e) {
+			p2p.emit('error', e);
+		}
+	})
+};
+
 

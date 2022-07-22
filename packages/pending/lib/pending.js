@@ -12,18 +12,16 @@ const { getUTXOs } =
 
 const ren = new RenJS("mainnet");
 
-const encodeTransferRequestLoan = (transferRequest) => {
+const encodeVaultTransferRequestLoan = (transferRequest) => {
   const contractInterface = new ethers.utils.Interface([
-    "function loan(address, address, uint256, uint256, address, bytes, bytes)",
+    "function loan(address, address, uint256, uint256, bytes)",
   ]);
   return contractInterface.encodeFunctionData("loan", [
+    transferRequest.module,
     new UnderwriterTransferRequest(transferRequest).destination(),
-    transferRequest.asset,
     transferRequest.amount,
     transferRequest.pNonce,
-    transferRequest.module,
     transferRequest.data,
-    transferRequest.signature,
   ]);
 };
 
@@ -104,19 +102,16 @@ const computeGatewayAddress = (transferRequest, mpkh) =>
   );
 
 const getBTCBlockNumber = async () => 0; // unused anyway
-const CONTROLLER_DEPLOYMENTS = {
-  "0x951E0dDe1fbe4AD1E9C027F46b653BAD2D99828d": 137,
-  "0x9880fCd5d42e8F4c2148f2c1187Df050BE3Dbd17": 42161,
-  "0xa8BD3FfEbF92538b3b830DD5B2516A5111DB164D": 1,
-  "0x1ec2Abe3F25F5d48567833Bf913f030Ec7a948Ba": 43114,
-  "0x5556834773F7c01e11a47449D56042cDF6Df9128": 10
+
+const VAULT_DEPLOYMENTS = {
+  [ethers.constants.AddressZero]: 1337,
 };
 
-const getChainId = (request) => {
+const getChainId = (request, deployments) => {
   return (
-    CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(request.contractAddress)] ||
+    deployments[ethers.utils.getAddress(request.contractAddress)] ||
     (() => {
-      throw Error("no controller found: " + request.contractAddress);
+      throw Error("no chain id found: " + request.contractAddress);
     })()
   );
 };
@@ -128,6 +123,8 @@ const logGatewayAddress = (logger, v) => {
   if (!seen[v]) logger.info("gateway: " + v);
   seen[v] = true;
 };
+
+const TIME_TO_EXPIRY_MS = 172800000
 
 const PendingProcess = (exports.PendingProcess = class PendingProcess {
   constructor({ redis, logger, mpkh }) {
@@ -142,6 +139,7 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
       await this.timeout(1000);
     }
   }
+
   async run() {
     const mpkh = ethers.utils.hexlify(await this.mpkh);
     // process first item in list
@@ -149,6 +147,13 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
       try {
         const item = await this.redis.lindex("/zero/pending", i);
         const transferRequest = JSON.parse(item);
+
+        if(transferRequest.timestamp > new Date().getTime() + TIME_TO_EXPIRY_MS){
+          const removed = await this.redis.lrem("/zero/pending", 1, item);
+          if (removed) i--;
+          continue;
+        }
+
         const gateway = await getGateway(transferRequest);
         logGatewayAddress(this.logger, gateway.gatewayAddress);
         const blockNumber = await getBTCBlockNumber();
@@ -160,14 +165,17 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
         if (utxos && utxos.length) {
           this.logger.info("got UTXO");
           this.logger.info(util.inspect(utxos, { colors: true, depth: 15 }));
-          if (
-            !CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(transferRequest.contractAddress)]
-          )
+          
+          const contractAddress = ethers.utils.getAddress(transferRequest.contractAddress)
+
+          if(VAULT_DEPLOYMENTS[contractAddress]) {
             await this.redis.lpush("/zero/dispatch", JSON.stringify({
               to: transferRequest.contractAddress,
-              data: encodeTransferRequestLoan(transferRequest),
-              chainId: getChainId(transferRequest),
+              data: encodeVaultTransferRequestLoan(transferRequest),
+              chainId: getChainId(transferRequest, VAULT_DEPLOYMENTS),
             }));
+          }
+
           await this.redis.rpush(
             "/zero/watch",
             JSON.stringify({

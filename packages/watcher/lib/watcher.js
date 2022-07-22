@@ -4,7 +4,8 @@
 
 const { UnderwriterTransferRequest } = require("zero-protocol/dist/lib/zero");
 const ethers = require('ethers');
-const encodeTransferRequestRepay = (transferRequest, queryResult) => {
+
+const encodeControllerTransferRequestRepay = (transferRequest, queryResult) => {
   const contractInterface = new ethers.utils.Interface([
     "function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)",
   ]);
@@ -21,6 +22,23 @@ const encodeTransferRequestRepay = (transferRequest, queryResult) => {
     queryResult.signature,
   ]);
 };
+
+const encodeVaultTransferRequestRepay = (transferRequest, queryResult) => {
+  const contractInterface = new ethers.utils.Interface([
+    "function repay(address, address, uint256, uint256, bytes, address, bytes32, bytes)",
+  ]);
+  return contractInterface.encodeFunctionData("repay", [
+    transferRequest.module,
+    transferRequest.destination(),
+    transferRequest.amount,
+    transferRequest.pNonce,
+    transferRequest.data,
+    transferRequest.underwriter,
+    queryResult.nHash,
+    queryResult.signature,
+  ]);
+};
+
 const CONTROLLER_DEPLOYMENTS = {
   "0x9880fCd5d42e8F4c2148f2c1187Df050BE3Dbd17": 42161,
   "0x951E0dDe1fbe4AD1E9C027F46b653BAD2D99828d": 137,
@@ -29,12 +47,15 @@ const CONTROLLER_DEPLOYMENTS = {
   "0x5556834773F7c01e11a47449D56042cDF6Df9128": 10
 };
 
+const VAULT_DEPLOYMENTS = {
+  [ethers.constants.AddressZero]: 1337,
+};
 
-const getChainId = (request) => {
+const getChainId = (request, deployments) => {
   return (
-    CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(request.contractAddress)] ||
+    deployments[ethers.utils.getAddress(request.contractAddress)] ||
     (() => {
-      throw Error("no controller found: " + request.contractAddress);
+      throw Error("no chain id found: " + request.contractAddress);
     })()
   );
 };
@@ -56,16 +77,35 @@ const WatcherProcess = (exports.WatcherProcess = class WatcherProcess {
         const transferRequest = new UnderwriterTransferRequest(tr.transferRequest);
         const { signature, amount, nHash, pHash } =
           await transferRequest.waitForSignature();
-        await this.redis.rpush("/zero/dispatch", JSON.stringify({
-          to: transferRequest.contractAddress,
-          data: encodeTransferRequestRepay(transferRequest, {
-            signature,
-            amount,
-            nHash,
-            pHash,
-          }),
-          chainId: getChainId(transferRequest),
-        }, null, 2));
+
+        const contractAddress = ethers.utils.getAddress(transferRequest.contractAddress)
+        
+        if (
+          CONTROLLER_DEPLOYMENTS[contractAddress]
+        ) {
+          await this.redis.rpush("/zero/dispatch", JSON.stringify({
+            to: transferRequest.contractAddress,
+            data: encodeControllerTransferRequestRepay(transferRequest, {
+              signature,
+              amount,
+              nHash,
+              pHash,
+            }),
+            chainId: getChainId(transferRequest, CONTROLLER_DEPLOYMENTS),
+          }, null, 2));
+        } else if(VAULT_DEPLOYMENTS[contractAddress]) {
+          await this.redis.rpush("/zero/dispatch", JSON.stringify({
+            to: transferRequest.contractAddress,
+            data: encodeVaultTransferRequestRepay(transferRequest, {
+              signature,
+              amount,
+              nHash,
+              pHash,
+            }),
+            chainId: getChainId(transferRequest, VAULT_DEPLOYMENTS),
+          }, null, 2));
+        }
+        
         await this.redis.lpop("/zero/watch");
       }
     } catch (error) {
