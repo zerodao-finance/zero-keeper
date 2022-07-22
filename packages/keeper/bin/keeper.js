@@ -72,8 +72,8 @@ async function handleEvent(data, deployments) {
   
   await peer.start()
 
-  handleRequestsV1(p2p)
-  handleRequestsV2(p2p)
+  handleRequestsV1(peer)
+  handleRequestsV2(peer)
 
   peer.on('peer:discovery', (peerInfo) => {
     logger.info('peer:discovery');
