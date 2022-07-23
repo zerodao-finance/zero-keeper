@@ -124,7 +124,7 @@ const logGatewayAddress = (logger, v) => {
   seen[v] = true;
 };
 
-const TIME_TO_EXPIRY_MS = 172800000
+const MS_IN_DAY = 86400000
 
 const PendingProcess = (exports.PendingProcess = class PendingProcess {
   constructor({ redis, logger, mpkh }) {
@@ -148,7 +148,8 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
         const item = await this.redis.lindex("/zero/pending", i);
         const transferRequest = JSON.parse(item);
 
-        if(transferRequest.timestamp > new Date().getTime() + TIME_TO_EXPIRY_MS){
+        const daysElapsed = Math.floor((new Date().getTime() - transferRequest.timestamp) / MS_IN_DAY)
+        if(daysElapsed >= 2){
           const removed = await this.redis.lrem("/zero/pending", 1, item);
           if (removed) i--;
           continue;
