@@ -32,7 +32,8 @@ const RPC_ENDPOINTS = {
 const NO_FLASHBOTS = {
   [43114]: true,
   [137]: true,
-  [42161]: true
+  [42161]: true,
+  [10]: true
 };
 
 const ERROR_TIMEOUT = 1000;
