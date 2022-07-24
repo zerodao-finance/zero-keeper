@@ -6,11 +6,9 @@ const {
 const ethers = require("ethers");
 const { Networks, Opcode, Script } = require("bitcore-lib");
 const util = require("util");
-const { RenJS } = require("@renproject/ren");
 const { getUTXOs } =
   require("send-crypto/build/main/handlers/BTC/BTCHandler").BTCHandler;
 
-const ren = new RenJS("mainnet");
 
 const encodeVaultTransferRequestLoan = (transferRequest) => {
   const contractInterface = new ethers.utils.Interface([
@@ -54,10 +52,6 @@ const computePHash = (transferRequest) => {
   );
 };
 
-const {
-  generateSHash,
-  generateGHash,
-} = require("@renproject/utils/build/main/renVMHashes");
 
 const toSelector = (address) => {
   return "BTC0Btc2Eth"; // TODO: implement switch over all networks
@@ -91,15 +85,6 @@ const addHexPrefix = (s) => (s.substr(0, 2) === "0x" ? s : "0x" + s);
 
 const stripHexPrefix = (s) => (s.substr(0, 2) === "0x" ? s.substr(2) : s);
 
-const {
-  BitcoinClass,
-} = require("@renproject/chains-bitcoin/build/main/bitcoin");
-const computeGatewayAddress = (transferRequest, mpkh) =>
-  new BitcoinClass("mainnet").getGatewayAddress(
-    "BTC",
-    Buffer.from(mpkh.substr(2), "hex"),
-    Buffer.from(computeGHash(transferRequest), "hex")
-  );
 
 const getBTCBlockNumber = async () => 0; // unused anyway
 
@@ -127,11 +112,9 @@ const logGatewayAddress = (logger, v) => {
 const MS_IN_DAY = 86400000
 
 const PendingProcess = (exports.PendingProcess = class PendingProcess {
-  constructor({ redis, logger, mpkh }) {
+  constructor({ redis, logger }) {
     this.redis = redis;
     this.logger = logger;
-    this.mpkh =
-      (mpkh && Promise.resolve(mpkh)) || ren.renVM.selectPublicKey("BTC"); // TODO: figure out the right RenJS function to call to get mpkh
   }
   async runLoop() {
     while (true) {
@@ -141,7 +124,6 @@ const PendingProcess = (exports.PendingProcess = class PendingProcess {
   }
 
   async run() {
-    const mpkh = ethers.utils.hexlify(await this.mpkh);
     // process first item in list
     for (let i = 0; i < await this.redis.llen('/zero/pending'); i++) {
       try {
